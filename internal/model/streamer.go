@@ -17,3 +17,7 @@ type Streamer struct {
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
+func (s *Streamer) BeforeCreate(tx *gorm.DB) (err error) {
+	s.ID = uuid.New()
+	return
+}
