@@ -27,6 +27,32 @@ func (t *TwitchAuthHandler) GenerateAuthURL() string {
 	}
 	return "https://id.twitch.tv/oauth2/authorize?" + params.Encode()
 }
+
+func (t *TwitchAuthHandler) ExchangeCode(ctx context.Context, code string) (string, error) {
+	data := url.Values{
+		"client_id":     {t.clientID},
+		"client_secret": {t.clientSecret},
+		"code":          {code},
+		"grant_type":    {"authorization_code"},
+		"redirect_uri":  {t.redirectURL},
+	}
+
+	resp, err := http.PostForm("https://id.twitch.tv/oauth2/token", data)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		AcessToken string `json:"acess_token"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	return result.AcessToken, nil
+}
 func generateState() string {
 	b := make([]byte, 32)
 	rand.Read(b)
