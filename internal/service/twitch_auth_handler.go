@@ -9,3 +9,8 @@ type TwitchAuthHandler struct {
 	clientSecret string
 	redirectURL  string
 }
+func generateState() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)
+}
