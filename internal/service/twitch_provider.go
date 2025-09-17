@@ -1,3 +1,16 @@
+type TwitchProvider struct {
+	handler *TwitchAuthHandler
+}
+
+func NewTwitchProvider() *TwitchProvider {
+	return &TwitchProvider{
+		handler: NewTwitchAuthHandler(),
+	}
+}
+
+func (t *TwitchProvider) GetAuthURL() string {
+	return t.handler.GenerateAuthURL()
+}
 func (t *TwitchProvider) GetUser(ctx context.Context, token string) (utils.ProviderUser, error) {
 	user, err := t.handler.GetUser(ctx, token)
 	if err != nil {
