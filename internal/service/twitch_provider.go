@@ -1,3 +1,11 @@
+package service
+
+import (
+	"context"
+
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
+)
+
 type TwitchProvider struct {
 	handler *TwitchAuthHandler
 }
@@ -11,6 +19,11 @@ func NewTwitchProvider() *TwitchProvider {
 func (t *TwitchProvider) GetAuthURL() string {
 	return t.handler.GenerateAuthURL()
 }
+
+func (t *TwitchProvider) ExchangeCode(ctx context.Context, code string) (string, error) {
+	return t.handler.ExchangeCode(ctx, code)
+}
+
 func (t *TwitchProvider) GetUser(ctx context.Context, token string) (utils.ProviderUser, error) {
 	user, err := t.handler.GetUser(ctx, token)
 	if err != nil {
