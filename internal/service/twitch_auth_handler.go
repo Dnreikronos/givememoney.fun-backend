@@ -60,14 +60,14 @@ func (t *TwitchAuthHandler) ExchangeCode(ctx context.Context, code string) (stri
 	defer resp.Body.Close()
 
 	var result struct {
-		AcessToken string `json:"acess_token"`
+		AccessToken string `json:"acess_token"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", err
 	}
 
-	return result.AcessToken, nil
+	return result.AccessToken, nil
 }
 
 func (t *TwitchAuthHandler) GetUser(ctx context.Context, accessToken string) (*TwitchUser, error) {
