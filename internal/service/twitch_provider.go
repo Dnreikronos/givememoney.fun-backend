@@ -10,3 +10,7 @@ func (t *TwitchProvider) GetUser(ctx context.Context, token string) (utils.Provi
 		Email: user.Email,
 	}, nil
 }
+
+func (t *TwitchProvider) GetProviderType() utils.StreamerProvider {
+	return utils.ProviderTwitch
+}
