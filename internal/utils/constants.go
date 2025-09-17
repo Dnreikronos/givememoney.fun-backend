@@ -10,3 +10,9 @@ const (
 	MetamaskWalletProvider WalletProvider   = "metamask"
 	PhantomWalletProvider  WalletProvider   = "phantom"
 )
+
+type ProviderUser struct {
+	ID    string
+	Name  string
+	Email string
+}
