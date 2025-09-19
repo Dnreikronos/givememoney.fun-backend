@@ -14,3 +14,12 @@ type AuthService struct {
 	streamerRepo *repository.StreamerRepository
 	providers    map[utils.StreamerProvider]utils.AuthProvider
 }
+
+func NewAuthService(streamerRepo *repository.StreamerRepository) *AuthService {
+	return &AuthService{
+		streamerRepo: streamerRepo,
+		providers: map[utils.StreamerProvider]utils.AuthProvider{
+			utils.ProviderTwitch: NewTwitchProvider(),
+		},
+	}
+}
