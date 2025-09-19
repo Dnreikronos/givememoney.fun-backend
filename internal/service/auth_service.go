@@ -23,3 +23,11 @@ func NewAuthService(streamerRepo *repository.StreamerRepository) *AuthService {
 		},
 	}
 }
+
+func (s *AuthService) GetAuthURL(provider utils.StreamerProvider) (string, error) {
+	p, exists := s.providers[provider]
+	if !exists {
+		return "", fmt.Errorf("unsupported provider")
+	}
+	return p.GetAuthURL(), nil
+}
