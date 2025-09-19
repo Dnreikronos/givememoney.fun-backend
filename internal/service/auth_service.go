@@ -31,3 +31,23 @@ func (s *AuthService) GetAuthURL(provider utils.StreamerProvider) (string, error
 	}
 	return p.GetAuthURL(), nil
 }
+
+func (s *AuthService) Authenticate(ctx context.Context, provider utils.StreamerProvider, code string) (*model.Streamer, error) {
+	p, exists := s.providers[provider]
+	if !exists {
+		return nil, fmt.Errorf("unsupported provider")
+	}
+
+	token, err := p.ExchangeCode(ctx, code)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := p.GetUser(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.upsertStreamer(ctx, provider, user)
+}
+
