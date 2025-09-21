@@ -60,11 +60,11 @@ func (s *SessionService) CreateSession(req SessionCreateRequest) (*model.Session
 	refreshTokenHash := s.hashToken(tokenPair.RefreshToken)
 
 	refreshToken := &model.RefreshToken{
-		StreamerID:   req.StreamerID,
-		TokenHash:    refreshTokenHash,
-		ExpiresAt:    time.Now().Add(7 * 24 * time.Hour),
-		UserAgent:    req.UserAgent,
-		IPAddress:    req.IPAddress,
+		StreamerID: req.StreamerID,
+		TokenHash:  refreshTokenHash,
+		ExpiresAt:  time.Now().Add(7 * 24 * time.Hour),
+		UserAgent:  req.UserAgent,
+		IPAddress:  req.IPAddress,
 	}
 
 	if err := s.db.Create(refreshToken).Error; err != nil {
@@ -264,7 +264,6 @@ func (s *SessionService) CleanupExpiredSessions() error {
 
 	return nil
 }
-
 
 func (s *SessionService) generateSessionToken() (string, error) {
 	bytes := make([]byte, 32)
