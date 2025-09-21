@@ -403,6 +403,130 @@ func (c *AuthController) GetActiveSessions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
+func (c *AuthController) EmailRegister(ctx *gin.Context) {
+	var req dto.RegisterRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		appErr := errors.NewValidationError("Invalid request body", err)
+		middleware.AbortWithError(ctx, appErr)
+		return
+	}
+
+	// Validate password and confirmation using middleware helper
+	if !middleware.ValidateRegisterRequest(ctx, &req) {
+		return
+	}
+
+	c.logger.Info("Processing email registration",
+		zap.String("email", req.Email),
+		zap.String("name", req.Name),
+		zap.String("ip", ctx.ClientIP()),
+	)
+
+	// Check if user already exists
+	existingStreamer, err := c.streamerRepo.FindByEmail(ctx.Request.Context(), req.Email)
+	if err == nil && existingStreamer != nil {
+		c.logger.Warn("Registration attempt with existing email",
+			zap.String("email", req.Email),
+			zap.String("ip", ctx.ClientIP()),
+		)
+		ctx.JSON(http.StatusConflict, dto.ErrorResponse{
+			Error:   "Email already registered",
+			Message: "An account with this email already exists",
+		})
+		return
+	}
+
+	// Create user via AuthService
+	streamer, err := c.authService.RegisterWithEmail(ctx.Request.Context(), req.Name, req.Email, req.Password)
+	if err != nil {
+		c.logger.Error("Email registration failed", zap.Error(err))
+		appErr := errors.NewInternalError("Registration failed", err)
+		middleware.AbortWithError(ctx, appErr)
+		return
+	}
+
+	// Create session for the new user
+	tokenPair, err := c.createSessionForStreamer(ctx, streamer)
+	if err != nil {
+		c.logger.Error("Session creation failed after registration", zap.Error(err), zap.String("streamer_id", streamer.ID.String()))
+		ctx.JSON(http.StatusInternalServerError, dto.ErrorResponse{
+			Error:   "Registration successful but session creation failed",
+			Message: "Please try logging in",
+		})
+		return
+	}
+
+	c.jwtService.SetTokenCookies(ctx, tokenPair)
+
+	c.logger.Info("Email registration successful",
+		zap.String("streamer_id", streamer.ID.String()),
+		zap.String("email", req.Email),
+	)
+
+	userResponse := c.getUserResponse(streamer)
+	ctx.JSON(http.StatusCreated, dto.AuthResponse{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		ExpiresIn:    tokenPair.ExpiresIn,
+		TokenType:    "Bearer",
+		User:         userResponse,
+	})
+}
+
+func (c *AuthController) EmailLogin(ctx *gin.Context) {
+	var req dto.EmailLoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		appErr := errors.NewValidationError("Invalid request body", err)
+		middleware.AbortWithError(ctx, appErr)
+		return
+	}
+
+	c.logger.Info("Processing email login",
+		zap.String("email", req.Email),
+		zap.String("ip", ctx.ClientIP()),
+	)
+
+	// Authenticate user via AuthService
+	streamer, err := c.authService.AuthenticateWithEmail(ctx.Request.Context(), req.Email, req.Password)
+	if err != nil {
+		c.logger.Warn("Email login failed",
+			zap.String("email", req.Email),
+			zap.String("ip", ctx.ClientIP()),
+			zap.Error(err),
+		)
+		ctx.JSON(http.StatusUnauthorized, dto.ErrorResponse{
+			Error:   "Invalid credentials",
+			Message: "Email or password is incorrect",
+		})
+		return
+	}
+
+	// Create session for the authenticated user
+	tokenPair, err := c.createSessionForStreamer(ctx, streamer)
+	if err != nil {
+		c.logger.Error("Session creation failed after login", zap.Error(err), zap.String("streamer_id", streamer.ID.String()))
+		appErr := errors.NewInternalError("Login failed", err)
+		middleware.AbortWithError(ctx, appErr)
+		return
+	}
+
+	c.jwtService.SetTokenCookies(ctx, tokenPair)
+
+	c.logger.Info("Email login successful",
+		zap.String("streamer_id", streamer.ID.String()),
+		zap.String("email", req.Email),
+	)
+
+	userResponse := c.getUserResponse(streamer)
+	ctx.JSON(http.StatusOK, dto.AuthResponse{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		ExpiresIn:    tokenPair.ExpiresIn,
+		TokenType:    "Bearer",
+		User:         userResponse,
+	})
+}
+
 func (c *AuthController) getFrontendURL() string {
 	frontendURL := os.Getenv("FRONTEND_URL")
 	if frontendURL == "" {
@@ -426,12 +550,21 @@ func (c *AuthController) createSessionForStreamer(ctx *gin.Context, streamer *mo
 }
 
 func (c *AuthController) getUserResponse(streamer *model.Streamer) dto.UserInfo {
+	provider := string(streamer.Provider)
+	providerID := streamer.ProviderID
+
+	// For email-authenticated users, set provider to "email" for clarity
+	if streamer.PasswordHash != nil && streamer.ProviderID == streamer.Email {
+		provider = "email"
+		providerID = streamer.Email
+	}
+
 	response := dto.UserInfo{
 		ID:          streamer.ID,
 		DisplayName: streamer.Name,
 		Username:    streamer.Name,
-		Provider:    string(streamer.Provider),
-		ProviderID:  streamer.ProviderID,
+		Provider:    provider,
+		ProviderID:  providerID,
 	}
 
 	if streamer.Wallet.ID != uuid.Nil {

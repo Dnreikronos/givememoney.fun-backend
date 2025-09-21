@@ -38,6 +38,15 @@ func (r *StreamerRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 	return &streamer, nil
 }
 
+func (r *StreamerRepository) FindByEmail(ctx context.Context, email string) (*model.Streamer, error) {
+	var streamer model.Streamer
+	err := r.db.WithContext(ctx).Preload("Wallet").Where("email = ?", email).First(&streamer).Error
+	if err != nil {
+		return nil, err
+	}
+	return &streamer, nil
+}
+
 func (r *StreamerRepository) Create(ctx context.Context, streamer *model.Streamer) error {
 	return r.db.WithContext(ctx).Create(streamer).Error
 }

@@ -13,6 +13,7 @@ import (
 type StreamerRepositoryInterface interface {
 	FindByProvider(ctx context.Context, provider utils.StreamerProvider, providerID string) (*model.Streamer, error)
 	FindByID(ctx context.Context, id uuid.UUID) (*model.Streamer, error)
+	FindByEmail(ctx context.Context, email string) (*model.Streamer, error)
 	Create(ctx context.Context, streamer *model.Streamer) error
 	Update(ctx context.Context, streamer *model.Streamer) error
 	CreateWithWallet(ctx context.Context, streamer *model.Streamer, wallet *model.Wallet) error

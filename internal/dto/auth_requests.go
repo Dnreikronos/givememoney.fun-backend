@@ -29,3 +29,17 @@ type RefreshTokenRequest struct {
 type SessionLogoutRequest struct {
 	LogoutAll bool `json:"logout_all" validate:"omitempty"`
 }
+
+// RegisterRequest represents a user registration request
+type RegisterRequest struct {
+	Name            string `json:"name" validate:"required,min=2,max=50" binding:"required,min=2,max=50"`
+	Email           string `json:"email" validate:"required,email" binding:"required,email"`
+	Password        string `json:"password" validate:"required,min=8" binding:"required,min=8"`
+	ConfirmPassword string `json:"confirm_password" validate:"required" binding:"required"`
+}
+
+// EmailLoginRequest represents an email/password login request
+type EmailLoginRequest struct {
+	Email    string `json:"email" validate:"required,email" binding:"required,email"`
+	Password string `json:"password" validate:"required" binding:"required"`
+}

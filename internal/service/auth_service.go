@@ -61,6 +61,67 @@ func (s *AuthService) UpsertStreamer(ctx context.Context, provider utils.Streame
 	return s.upsertStreamer(ctx, provider, user)
 }
 
+func (s *AuthService) RegisterWithEmail(ctx context.Context, name, email, password string) (*model.Streamer, error) {
+	// Hash the password
+	hashedPassword, err := utils.HashPassword(password)
+	if err != nil {
+		log.Printf("Failed to hash password: %v", err)
+		return nil, fmt.Errorf("failed to process password: %w", err)
+	}
+
+	// Create temporary wallet for email users
+	tempHash := fmt.Sprintf("temp_email_%s", email)
+	wallet := &model.Wallet{
+		WalletProvider:   utils.MetamaskWalletProvider,
+		WalletProviderID: "",
+		Hash:             tempHash,
+	}
+
+	streamer := &model.Streamer{
+		Provider:     utils.ProviderTwitch, // Using a default provider for email users
+		ProviderID:   email,                // Using email as ProviderID for email auth
+		Name:         name,
+		Email:        email,
+		PasswordHash: &hashedPassword,
+	}
+
+	if err := s.streamerRepo.CreateWithWallet(ctx, streamer, wallet); err != nil {
+		log.Printf("Failed to create streamer with wallet: %v", err)
+		return nil, fmt.Errorf("failed to create streamer: %w", err)
+	}
+
+	createdStreamer, err := s.streamerRepo.FindByID(ctx, streamer.ID)
+	if err != nil {
+		log.Printf("Failed to reload streamer: %v", err)
+		return nil, fmt.Errorf("failed to reload streamer: %w", err)
+	}
+
+	return createdStreamer, nil
+}
+
+func (s *AuthService) AuthenticateWithEmail(ctx context.Context, email, password string) (*model.Streamer, error) {
+	// Find user by email
+	streamer, err := s.streamerRepo.FindByEmail(ctx, email)
+	if err != nil {
+		log.Printf("Failed to find user by email: %v", err)
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Check if user has a password (email authentication)
+	if streamer.PasswordHash == nil {
+		log.Printf("User %s has no password set", email)
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	// Verify password
+	if err := utils.VerifyPassword(password, *streamer.PasswordHash); err != nil {
+		log.Printf("Password verification failed for user %s: %v", email, err)
+		return nil, fmt.Errorf("invalid credentials")
+	}
+
+	return streamer, nil
+}
+
 func (s *AuthService) upsertStreamer(ctx context.Context, provider utils.StreamerProvider, user utils.ProviderUser) (*model.Streamer, error) {
 	existingStreamer, err := s.streamerRepo.FindByProvider(ctx, provider, user.ID)
 	if err == nil {

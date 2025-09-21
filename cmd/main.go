@@ -77,6 +77,10 @@ func main() {
 				kick.GET("/callback", authController.KickCallback)
 			}
 
+			// Email/password authentication endpoints
+			auth.POST("/register", middleware.AuthRateLimitMiddleware(), authController.EmailRegister)
+			auth.POST("/login", middleware.AuthRateLimitMiddleware(), authController.EmailLogin)
+
 			// General auth endpoints
 			auth.POST("/refresh", authController.RefreshToken)
 			auth.POST("/logout", authController.Logout)
