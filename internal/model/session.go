@@ -8,20 +8,20 @@ import (
 )
 
 type Session struct {
-	ID               uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	StreamerID       uuid.UUID  `gorm:"type:uuid;not null;index" json:"streamer_id"`
-	SessionToken     string     `gorm:"type:varchar(255);not null;unique" json:"session_token"`
-	RefreshTokenID   *uuid.UUID `gorm:"type:uuid;index" json:"refresh_token_id,omitempty"`
-	ExpiresAt        time.Time  `gorm:"not null" json:"expires_at"`
-	IsActive         bool       `gorm:"default:true" json:"is_active"`
-	CreatedAt        time.Time  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt        time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
-	LastAccessedAt   time.Time  `gorm:"autoCreateTime" json:"last_accessed_at"`
-	UserAgent        string     `gorm:"type:text" json:"user_agent,omitempty"`
-	IPAddress        string     `gorm:"type:varchar(45)" json:"ip_address,omitempty"`
-	Country          string     `gorm:"type:varchar(2)" json:"country,omitempty"`
-	DeviceType       string     `gorm:"type:varchar(50)" json:"device_type,omitempty"`
-	LoginMethod      string     `gorm:"type:varchar(50)" json:"login_method,omitempty"`
+	ID             uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	StreamerID     uuid.UUID  `gorm:"type:uuid;not null;index" json:"streamer_id"`
+	SessionToken   string     `gorm:"type:varchar(255);not null;unique" json:"session_token"`
+	RefreshTokenID *uuid.UUID `gorm:"type:uuid;index" json:"refresh_token_id,omitempty"`
+	ExpiresAt      time.Time  `gorm:"not null" json:"expires_at"`
+	IsActive       bool       `gorm:"default:true" json:"is_active"`
+	CreatedAt      time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt      time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	LastAccessedAt time.Time  `gorm:"autoCreateTime" json:"last_accessed_at"`
+	UserAgent      string     `gorm:"type:text" json:"user_agent,omitempty"`
+	IPAddress      string     `gorm:"type:varchar(45)" json:"ip_address,omitempty"`
+	Country        string     `gorm:"type:varchar(2)" json:"country,omitempty"`
+	DeviceType     string     `gorm:"type:varchar(50)" json:"device_type,omitempty"`
+	LoginMethod    string     `gorm:"type:varchar(50)" json:"login_method,omitempty"`
 
 	Streamer     Streamer      `gorm:"foreignKey:StreamerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"streamer,omitempty"`
 	RefreshToken *RefreshToken `gorm:"foreignKey:RefreshTokenID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"refresh_token,omitempty"`
