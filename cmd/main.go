@@ -71,6 +71,12 @@ func main() {
 				twitch.GET("/user", authController.TwitchUser)
 			}
 
+			kick := auth.Group("/kick")
+			{
+				kick.GET("/login", authController.KickLogin)
+				kick.GET("/callback", authController.KickCallback)
+			}
+
 			// General auth endpoints
 			auth.POST("/refresh", authController.RefreshToken)
 			auth.POST("/logout", authController.Logout)
