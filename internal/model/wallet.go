@@ -7,11 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type WalletUpdateInput struct {
-	Hash string `json:"hash" validate:"required,len=64"`
-}
-
-type WalletInput struct {
+type WalletRequest struct {
 	WalletProvider utils.WalletProvider `json:"wallet_provider" validate:"required"`
 	Hash           string               `json:"hash" validate:"required,len=64"`
 }
