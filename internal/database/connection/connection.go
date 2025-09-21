@@ -24,8 +24,8 @@ type DBConfig struct {
 // getDBConfig returns database configuration from environment variables with defaults
 func getDBConfig() DBConfig {
 	config := DBConfig{
-		MaxIdleConns:    10,  // Default idle connections
-		MaxOpenConns:    25,  // Default max connections
+		MaxIdleConns:    10, // Default idle connections
+		MaxOpenConns:    25, // Default max connections
 		ConnMaxLifetime: 5 * time.Minute,
 		ConnMaxIdleTime: 5 * time.Minute,
 	}
@@ -67,7 +67,7 @@ func OpenConnection() (*gorm.DB, error) {
 
 	// Configure GORM with optimized settings
 	config := &gorm.Config{
-		PrepareStmt: true, // Enable prepared statements for better performance
+		PrepareStmt: true,                                 // Enable prepared statements for better performance
 		Logger:      logger.Default.LogMode(logger.Error), // Only log errors in production
 	}
 
