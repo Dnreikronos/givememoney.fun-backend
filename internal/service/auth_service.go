@@ -20,6 +20,7 @@ func NewAuthService(streamerRepo interfaces.StreamerRepositoryInterface) *AuthSe
 		streamerRepo: streamerRepo,
 		providers: map[utils.StreamerProvider]utils.AuthProvider{
 			utils.ProviderTwitch: NewTwitchProvider(),
+			utils.ProviderKick:   NewKickProvider(),
 		},
 	}
 }
