@@ -8,6 +8,12 @@ type TwitchCallbackRequest struct {
 	State string `form:"state" validate:"omitempty"`
 }
 
+// KickCallbackRequest represents the callback request from Kick OAuth
+type KickCallbackRequest struct {
+	Code  string `form:"code" validate:"required" binding:"required"`
+	State string `form:"state" validate:"required" binding:"required"`
+}
+
 // WalletRequest represents a wallet creation/update request
 type WalletRequest struct {
 	WalletProvider utils.WalletProvider `json:"wallet_provider" validate:"required" binding:"required"`

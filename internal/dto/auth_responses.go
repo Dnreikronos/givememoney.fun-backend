@@ -42,7 +42,7 @@ type ErrorResponse struct {
 
 // ValidationErrorResponse represents validation error details
 type ValidationErrorResponse struct {
-	Error  string                 `json:"error"`
-	Fields map[string]string      `json:"fields"`
+	Error   string                 `json:"error"`
+	Fields  map[string]string      `json:"fields"`
 	Details map[string]interface{} `json:"details,omitempty"`
 }
