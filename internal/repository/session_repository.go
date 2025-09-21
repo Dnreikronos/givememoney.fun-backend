@@ -19,7 +19,6 @@ func NewSessionRepository(db *gorm.DB) interfaces.SessionRepositoryInterface {
 	return &SessionRepository{db: db}
 }
 
-
 func (r *SessionRepository) CreateSession(session *model.Session) error {
 	return r.db.Create(session).Error
 }
@@ -79,7 +78,6 @@ func (r *SessionRepository) DeleteExpiredSessions(olderThan time.Time) error {
 		Delete(&model.Session{}).Error
 }
 
-
 func (r *SessionRepository) CreateRefreshToken(token *model.RefreshToken) error {
 	return r.db.Create(token).Error
 }
@@ -124,7 +122,6 @@ func (r *SessionRepository) DeleteExpiredRefreshTokens(olderThan time.Time) erro
 		Delete(&model.RefreshToken{}).Error
 }
 
-
 func (r *SessionRepository) GetActiveSessionCount() (int64, error) {
 	var count int64
 	err := r.db.Model(&model.Session{}).Where("is_active = true AND expires_at > ?", time.Now()).Count(&count).Error
@@ -144,7 +141,6 @@ func (r *SessionRepository) GetRecentLoginsByStreamer(streamerID uuid.UUID, sinc
 		Order("created_at DESC").Limit(10).Find(&sessions).Error
 	return sessions, err
 }
-
 
 func (r *SessionRepository) GetSessionsByIP(ipAddress string, since time.Time) ([]model.Session, error) {
 	var sessions []model.Session
