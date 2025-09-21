@@ -6,7 +6,7 @@ type WalletProvider string
 const (
 	ProviderTwitch         StreamerProvider = "twitch"
 	ProviderKick           StreamerProvider = "kick"
-	ProviderYoutube        StreamerProvider = "kick"
+	ProviderYoutube        StreamerProvider = "youtube"
 	MetamaskWalletProvider WalletProvider   = "metamask"
 	PhantomWalletProvider  WalletProvider   = "phantom"
 )
