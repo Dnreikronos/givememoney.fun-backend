@@ -26,8 +26,8 @@ const (
 	ErrorCodeConflict      ErrorCode = "CONFLICT"
 
 	// System errors
-	ErrorCodeDatabaseError  ErrorCode = "DATABASE_ERROR"
-	ErrorCodeInternalError  ErrorCode = "INTERNAL_ERROR"
+	ErrorCodeDatabaseError      ErrorCode = "DATABASE_ERROR"
+	ErrorCodeInternalError      ErrorCode = "INTERNAL_ERROR"
 	ErrorCodeServiceUnavailable ErrorCode = "SERVICE_UNAVAILABLE"
 
 	// Rate limiting
