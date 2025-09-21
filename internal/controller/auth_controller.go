@@ -18,11 +18,11 @@ import (
 )
 
 type AuthController struct {
-	authService      *service.AuthService
-	jwtService       *service.JWTService
-	sessionService   *service.SessionService
-	streamerRepo     interfaces.StreamerRepositoryInterface
-	logger           *zap.Logger
+	authService    *service.AuthService
+	jwtService     *service.JWTService
+	sessionService *service.SessionService
+	streamerRepo   interfaces.StreamerRepositoryInterface
+	logger         *zap.Logger
 }
 
 func NewAuthController(
@@ -33,11 +33,11 @@ func NewAuthController(
 	logger *zap.Logger,
 ) *AuthController {
 	return &AuthController{
-		authService:      authService,
-		jwtService:       jwtService,
-		sessionService:   sessionService,
-		streamerRepo:     streamerRepo,
-		logger:           logger,
+		authService:    authService,
+		jwtService:     jwtService,
+		sessionService: sessionService,
+		streamerRepo:   streamerRepo,
+		logger:         logger,
 	}
 }
 
@@ -50,6 +50,22 @@ func (c *AuthController) TwitchLogin(ctx *gin.Context) {
 	}
 
 	c.logger.Info("Redirecting to Twitch auth",
+		zap.String("auth_url", authURL),
+		zap.String("ip", ctx.ClientIP()),
+	)
+
+	ctx.Redirect(http.StatusFound, authURL)
+}
+
+func (c *AuthController) KickLogin(ctx *gin.Context) {
+	authURL, err := c.authService.GetAuthURL(utils.ProviderKick)
+	if err != nil {
+		appErr := errors.NewTwitchAPIError("Failed to get Kick auth URL", err)
+		middleware.AbortWithError(ctx, appErr)
+		return
+	}
+
+	c.logger.Info("Redirecting to Kick auth",
 		zap.String("auth_url", authURL),
 		zap.String("ip", ctx.ClientIP()),
 	)
@@ -92,6 +108,77 @@ func (c *AuthController) TwitchCallback(ctx *gin.Context) {
 	ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/dashboard", frontendURL))
 }
 
+func (c *AuthController) KickCallback(ctx *gin.Context) {
+	var req dto.KickCallbackRequest
+	if !middleware.ValidateQuery(ctx, &req) {
+		return
+	}
+
+	frontendURL := c.getFrontendURL()
+	c.logger.Info("Processing Kick callback",
+		zap.String("frontend_url", frontendURL),
+		zap.String("ip", ctx.ClientIP()),
+	)
+
+	// Validate state for PKCE flow
+	provider, exists := c.authService.GetProvider(utils.ProviderKick)
+	if !exists {
+		c.logger.Error("Kick provider not found")
+		ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=provider_not_found", frontendURL))
+		return
+	}
+
+	// Type assert to access state validation (specific to our Kick provider)
+	if kickProvider, ok := provider.(*service.KickProvider); ok {
+		if !kickProvider.ValidateState(req.State) {
+			c.logger.Error("Invalid state parameter", zap.String("state", req.State))
+			ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=invalid_state", frontendURL))
+			return
+		}
+
+		// Use ExchangeCodeWithState for proper PKCE flow
+		token, err := kickProvider.ExchangeCodeWithState(ctx.Request.Context(), req.Code, req.State)
+		if err != nil {
+			c.logger.Error("Kick token exchange failed", zap.Error(err))
+			ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=auth_failed", frontendURL))
+			return
+		}
+
+		user, err := provider.GetUser(ctx.Request.Context(), token)
+		if err != nil {
+			c.logger.Error("Failed to get Kick user", zap.Error(err))
+			ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=user_fetch_failed", frontendURL))
+			return
+		}
+
+		streamer, err := c.authService.UpsertStreamer(ctx.Request.Context(), utils.ProviderKick, user)
+		if err != nil {
+			c.logger.Error("Failed to upsert Kick streamer", zap.Error(err))
+			ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=user_creation_failed", frontendURL))
+			return
+		}
+
+		tokenPair, err := c.createSessionForStreamer(ctx, streamer)
+		if err != nil {
+			c.logger.Error("Session creation failed", zap.Error(err), zap.String("streamer_id", streamer.ID.String()))
+			ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=session_creation_failed", frontendURL))
+			return
+		}
+
+		c.jwtService.SetTokenCookies(ctx, tokenPair)
+
+		c.logger.Info("Kick session created successfully",
+			zap.String("streamer_id", streamer.ID.String()),
+			zap.String("provider", string(streamer.Provider)),
+		)
+		ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/dashboard", frontendURL))
+		return
+	}
+
+	c.logger.Error("Failed to cast provider to KickProvider")
+	ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=auth_failed", frontendURL))
+}
+
 func (c *AuthController) TwitchToken(ctx *gin.Context) {
 	code := ctx.PostForm("code")
 	if code == "" {
@@ -107,7 +194,7 @@ func (c *AuthController) TwitchToken(ctx *gin.Context) {
 
 	accessToken, err := provider.ExchangeCode(ctx.Request.Context(), code)
 	if err != nil {
-			c.logger.Error("Token exchange failed", zap.Error(err))
+		c.logger.Error("Token exchange failed", zap.Error(err))
 		appErr := errors.NewTwitchAPIError("Token exchange failed", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -115,7 +202,7 @@ func (c *AuthController) TwitchToken(ctx *gin.Context) {
 
 	twitchUser, err := provider.GetUser(ctx.Request.Context(), accessToken)
 	if err != nil {
-			c.logger.Error("Failed to get user info", zap.Error(err))
+		c.logger.Error("Failed to get user info", zap.Error(err))
 		appErr := errors.NewTwitchAPIError("Failed to get user info", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -123,7 +210,7 @@ func (c *AuthController) TwitchToken(ctx *gin.Context) {
 
 	streamer, err := c.authService.UpsertStreamer(ctx.Request.Context(), utils.ProviderTwitch, twitchUser)
 	if err != nil {
-			c.logger.Error("Failed to upsert streamer", zap.Error(err))
+		c.logger.Error("Failed to upsert streamer", zap.Error(err))
 		appErr := errors.NewDatabaseError("upsert streamer", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -131,7 +218,7 @@ func (c *AuthController) TwitchToken(ctx *gin.Context) {
 
 	jwt, err := c.jwtService.GenerateToken(streamer.ID, streamer.Email, streamer.Name, string(streamer.Provider))
 	if err != nil {
-			c.logger.Error("Failed to generate JWT", zap.Error(err))
+		c.logger.Error("Failed to generate JWT", zap.Error(err))
 		appErr := errors.NewInternalError("Failed to generate token", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -143,7 +230,7 @@ func (c *AuthController) TwitchToken(ctx *gin.Context) {
 		"expires_in":    3600, // 1 hour
 		"scope":         "user:read:email",
 		"refresh_token": "",
-		"jwt_token": jwt,
+		"jwt_token":     jwt,
 	})
 }
 
@@ -182,7 +269,7 @@ func (c *AuthController) TwitchUser(ctx *gin.Context) {
 func (c *AuthController) RefreshToken(ctx *gin.Context) {
 	tokenPair, err := c.sessionService.RefreshSession(ctx)
 	if err != nil {
-			c.logger.Error("Token refresh failed", zap.Error(err))
+		c.logger.Error("Token refresh failed", zap.Error(err))
 		appErr := errors.NewUnauthorizedError("Invalid refresh token")
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -197,7 +284,7 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 func (c *AuthController) Logout(ctx *gin.Context) {
 	err := c.sessionService.InvalidateSession(ctx)
 	if err != nil {
-			c.logger.Error("Logout failed", zap.Error(err))
+		c.logger.Error("Logout failed", zap.Error(err))
 		appErr := errors.NewInternalError("Logout failed", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -205,7 +292,6 @@ func (c *AuthController) Logout(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
-
 
 func (c *AuthController) CreateSession(ctx *gin.Context) {
 	var request struct {
@@ -250,7 +336,7 @@ func (c *AuthController) CreateSession(ctx *gin.Context) {
 
 	_, tokenPair, err := c.sessionService.CreateSession(sessionReq)
 	if err != nil {
-			c.logger.Error("Session creation failed", zap.Error(err))
+		c.logger.Error("Session creation failed", zap.Error(err))
 		appErr := errors.NewInternalError("Session creation failed", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -291,7 +377,7 @@ func (c *AuthController) GetSession(ctx *gin.Context) {
 func (c *AuthController) DeleteSession(ctx *gin.Context) {
 	err := c.sessionService.InvalidateSession(ctx)
 	if err != nil {
-			c.logger.Error("Session deletion failed", zap.Error(err))
+		c.logger.Error("Session deletion failed", zap.Error(err))
 		appErr := errors.NewInternalError("Session deletion failed", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
@@ -303,7 +389,7 @@ func (c *AuthController) DeleteSession(ctx *gin.Context) {
 func (c *AuthController) GetActiveSessions(ctx *gin.Context) {
 	result, err := c.sessionService.ValidateSession(ctx)
 	if err != nil || !result.IsValid {
-			appErr := errors.NewUnauthorizedError("Authentication required")
+		appErr := errors.NewUnauthorizedError("Authentication required")
 		middleware.AbortWithError(ctx, appErr)
 		return
 	}
@@ -316,7 +402,6 @@ func (c *AuthController) GetActiveSessions(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
-
 
 func (c *AuthController) getFrontendURL() string {
 	frontendURL := os.Getenv("FRONTEND_URL")
@@ -410,8 +495,8 @@ func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr ||
 		(len(s) > len(substr) &&
 			(s[:len(substr)] == substr ||
-			 s[len(s)-len(substr):] == substr ||
-			 findSubstring(s, substr))))
+				s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr))))
 }
 
 func findSubstring(s, substr string) bool {
