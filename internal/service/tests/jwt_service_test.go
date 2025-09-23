@@ -16,7 +16,6 @@ type JWTServiceTestSuite struct {
 }
 
 func (suite *JWTServiceTestSuite) SetupTest() {
-	// Set up environment for testing
 	os.Setenv("JWT_SECRET", "test-secret-key-that-is-long-enough-for-security")
 	os.Setenv("GO_ENV", "test")
 
@@ -24,7 +23,6 @@ func (suite *JWTServiceTestSuite) SetupTest() {
 }
 
 func (suite *JWTServiceTestSuite) TearDownTest() {
-	// Clean up environment
 	os.Unsetenv("JWT_SECRET")
 	os.Unsetenv("GO_ENV")
 }
@@ -47,11 +45,9 @@ func (suite *JWTServiceTestSuite) TestValidateToken() {
 	name := "Test User"
 	provider := "twitch"
 
-	// Generate a token
 	token, err := suite.jwtService.GenerateToken(userID, email, name, provider)
 	assert.NoError(suite.T(), err)
 
-	// Validate the token
 	claims, err := suite.jwtService.ValidateToken(token)
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), userID, claims.UserID)
@@ -81,7 +77,6 @@ func (suite *JWTServiceTestSuite) TestGenerateTokenPair() {
 	assert.NotEmpty(suite.T(), tokenPair.RefreshToken)
 	assert.Equal(suite.T(), int64(900), tokenPair.ExpiresIn) // 15 minutes
 
-	// Validate both tokens
 	accessClaims, err := suite.jwtService.ValidateAccessToken(tokenPair.AccessToken)
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), "access", accessClaims.TokenType)
@@ -97,17 +92,14 @@ func (suite *JWTServiceTestSuite) TestRefreshToken() {
 	name := "Test User"
 	provider := "twitch"
 
-	// Generate initial token pair
 	initialPair, err := suite.jwtService.GenerateTokenPair(userID, email, name, provider)
 	assert.NoError(suite.T(), err)
 
-	// Refresh the token
 	newPair, err := suite.jwtService.RefreshToken(initialPair.RefreshToken)
 	assert.NoError(suite.T(), err)
 	assert.NotEmpty(suite.T(), newPair.AccessToken)
 	assert.NotEmpty(suite.T(), newPair.RefreshToken)
 
-	// Validate that the refresh worked (tokens should be valid)
 	accessClaims, err := suite.jwtService.ValidateAccessToken(newPair.AccessToken)
 	assert.NoError(suite.T(), err)
 	assert.Equal(suite.T(), userID, accessClaims.UserID)
@@ -126,7 +118,6 @@ func (suite *JWTServiceTestSuite) TestValidateAccessTokenRejectsRefreshToken() {
 	tokenPair, err := suite.jwtService.GenerateTokenPair(userID, email, name, provider)
 	assert.NoError(suite.T(), err)
 
-	// Try to validate refresh token as access token
 	claims, err := suite.jwtService.ValidateAccessToken(tokenPair.RefreshToken)
 	assert.Error(suite.T(), err)
 	assert.Nil(suite.T(), claims)
