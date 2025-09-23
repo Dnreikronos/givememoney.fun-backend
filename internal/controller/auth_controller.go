@@ -567,14 +567,6 @@ func (c *AuthController) getUserResponse(streamer *model.Streamer) dto.UserInfo 
 		ProviderID:  providerID,
 	}
 
-	if streamer.Wallet.ID != uuid.Nil {
-		response.Wallet = &dto.Wallet{
-			ID:       streamer.Wallet.ID,
-			Provider: string(streamer.Wallet.WalletProvider),
-			Hash:     streamer.Wallet.Hash,
-		}
-	}
-
 	return response
 }
 
