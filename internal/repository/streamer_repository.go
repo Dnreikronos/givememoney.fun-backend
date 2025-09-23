@@ -55,7 +55,7 @@ func (r *StreamerRepository) Update(ctx context.Context, streamer *model.Streame
 	return r.db.WithContext(ctx).Save(streamer).Error
 }
 
-func (r *StreamerRepository) CreateUser(ctx context.Context, streamer *model.Streamer) error {
+func (r *StreamerRepository) CreateStreamer(ctx context.Context, streamer *model.Streamer) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(streamer).Error; err != nil {
 			return err
