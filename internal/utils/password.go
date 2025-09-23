@@ -12,26 +12,20 @@ const (
 	// Higher values provide better security but slower performance
 	BcryptCost = 12
 
-	// Password validation constants
 	MinPasswordLength = 8
 	MaxPasswordLength = 128
 )
 
 var (
-	// ErrPasswordTooShort is returned when password is too short
 	ErrPasswordTooShort = errors.New("password must be at least 8 characters long")
 
-	// ErrPasswordTooLong is returned when password is too long
 	ErrPasswordTooLong = errors.New("password must be less than 128 characters long")
 
-	// ErrPasswordTooWeak is returned when password doesn't meet strength requirements
 	ErrPasswordTooWeak = errors.New("password must contain at least one lowercase letter, one uppercase letter, and one number")
 
-	// ErrInvalidPassword is returned when password verification fails
 	ErrInvalidPassword = errors.New("invalid password")
 )
 
-// Password strength validation patterns
 var (
 	hasLowerCase = regexp.MustCompile(`[a-z]`)
 	hasUpperCase = regexp.MustCompile(`[A-Z]`)
@@ -52,7 +46,6 @@ func HashPassword(password string) (string, error) {
 	return string(hashedBytes), nil
 }
 
-// VerifyPassword verifies a password against its hash
 func VerifyPassword(password, hash string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	if err != nil {
@@ -64,9 +57,7 @@ func VerifyPassword(password, hash string) error {
 	return nil
 }
 
-// ValidatePasswordStrength checks if password meets security requirements
 func ValidatePasswordStrength(password string) error {
-	// Check length
 	if len(password) < MinPasswordLength {
 		return ErrPasswordTooShort
 	}
@@ -91,7 +82,6 @@ func ValidatePasswordStrength(password string) error {
 	return nil
 }
 
-// IsPasswordSecure performs comprehensive password validation
 func IsPasswordSecure(password string) bool {
 	return ValidatePasswordStrength(password) == nil
 }
