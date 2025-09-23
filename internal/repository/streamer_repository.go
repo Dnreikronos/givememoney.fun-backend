@@ -55,17 +55,11 @@ func (r *StreamerRepository) Update(ctx context.Context, streamer *model.Streame
 	return r.db.WithContext(ctx).Save(streamer).Error
 }
 
-func (r *StreamerRepository) CreateWithWallet(ctx context.Context, streamer *model.Streamer, wallet *model.Wallet) error {
+func (r *StreamerRepository) CreateUser(ctx context.Context, streamer *model.Streamer) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(wallet).Error; err != nil {
-			return err
-		}
-
-		streamer.WalletID = wallet.ID
 		if err := tx.Create(streamer).Error; err != nil {
 			return err
 		}
-
 		return nil
 	})
 }

@@ -16,7 +16,7 @@ type StreamerRepositoryInterface interface {
 	FindByEmail(ctx context.Context, email string) (*model.Streamer, error)
 	Create(ctx context.Context, streamer *model.Streamer) error
 	Update(ctx context.Context, streamer *model.Streamer) error
-	CreateWithWallet(ctx context.Context, streamer *model.Streamer, wallet *model.Wallet) error
+	CreateUser(ctx context.Context, streamer *model.Streamer) error
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
