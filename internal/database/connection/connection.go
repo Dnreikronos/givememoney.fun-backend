@@ -13,7 +13,6 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// DBConfig holds database configuration
 type DBConfig struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
@@ -21,7 +20,6 @@ type DBConfig struct {
 	ConnMaxIdleTime time.Duration
 }
 
-// getDBConfig returns database configuration from environment variables with defaults
 func getDBConfig() DBConfig {
 	config := DBConfig{
 		MaxIdleConns:    10, // Default idle connections
@@ -67,8 +65,8 @@ func OpenConnection() (*gorm.DB, error) {
 
 	// Configure GORM with optimized settings
 	config := &gorm.Config{
-		PrepareStmt: true,                                 // Enable prepared statements for better performance
-		Logger:      logger.Default.LogMode(logger.Error), // Only log errors in production
+		PrepareStmt: true,
+		Logger:      logger.Default.LogMode(logger.Error),
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), config)
@@ -76,20 +74,17 @@ func OpenConnection() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	// Get underlying sql.DB to configure connection pool
 	sqlDB, err := db.DB()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
 
-	// Apply connection pool configuration
 	dbConfig := getDBConfig()
 	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConns)
 	sqlDB.SetConnMaxLifetime(dbConfig.ConnMaxLifetime)
 	sqlDB.SetConnMaxIdleTime(dbConfig.ConnMaxIdleTime)
 
-	// Test the connection with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
