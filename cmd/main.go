@@ -35,7 +35,6 @@ func main() {
 	}
 	log.Println("Database migration completed successfully")
 
-	// Initialize logger
 	loggerService, err := service.NewLoggerService()
 	if err != nil {
 		log.Fatal("Failed to initialize logger:", err)
@@ -43,15 +42,12 @@ func main() {
 	logger := loggerService.GetLogger()
 	defer loggerService.Sync()
 
-	// Initialize repositories
 	streamerRepo := repository.NewStreamerRepository(db)
 
-	// Initialize services
 	authService := service.NewAuthService(streamerRepo)
 	jwtService := service.NewJWTService()
 	sessionService := service.NewSessionService(db, jwtService)
 
-	// Initialize controllers
 	authController := controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger)
 
 	router := gin.Default()
