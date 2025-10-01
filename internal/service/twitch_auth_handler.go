@@ -37,7 +37,7 @@ func NewStateStore() *StateStore {
 func (s *StateStore) Add(state string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	s.states[state] = time.Now().Add(10 * time.Minute) // State expires in 10 minutes
+	s.states[state] = time.Now().Add(10 * time.Minute)
 }
 
 func (s *StateStore) Validate(state string) bool {
@@ -54,7 +54,7 @@ func (s *StateStore) Validate(state string) bool {
 		return false
 	}
 
-	delete(s.states, state) // Single use
+	delete(s.states, state)
 	return true
 }
 
@@ -129,7 +129,7 @@ func (t *TwitchAuthHandler) ExchangeCode(ctx context.Context, code string) (stri
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Twitch token exchange failed with status: %d", resp.StatusCode)
+		return "", fmt.Errorf("twitch token exchange failed with status: %d", resp.StatusCode)
 	}
 
 	var result struct {
@@ -143,7 +143,7 @@ func (t *TwitchAuthHandler) ExchangeCode(ctx context.Context, code string) (stri
 	}
 
 	if result.Error != "" {
-		return "", fmt.Errorf("Twitch API error: %s - %s", result.Error, result.ErrorDesc)
+		return "", fmt.Errorf("twitch API error: %s - %s", result.Error, result.ErrorDesc)
 	}
 
 	if result.AccessToken == "" {
@@ -173,7 +173,7 @@ func (t *TwitchAuthHandler) GetUser(ctx context.Context, accessToken string) (*T
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("Twitch user API failed with status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("twitch user API failed with status: %d", resp.StatusCode)
 	}
 
 	var result struct {
