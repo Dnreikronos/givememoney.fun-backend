@@ -14,34 +14,6 @@ func init() {
 	validate = validator.New()
 }
 
-func ValidationMiddleware() gin.HandlerFunc {
-	return gin.HandlerFunc(func(c *gin.Context) {
-		c.Set("validator", validate)
-		c.Next()
-	})
-}
-
-func ValidateJSON(c *gin.Context, obj interface{}) bool {
-	if err := c.ShouldBindJSON(obj); err != nil {
-		validationErrors := make(map[string]string)
-
-		if validatorErrors, ok := err.(validator.ValidationErrors); ok {
-			for _, e := range validatorErrors {
-				validationErrors[e.Field()] = getValidationErrorMessage(e)
-			}
-		} else {
-			validationErrors["json"] = "Invalid JSON format"
-		}
-
-		c.JSON(http.StatusBadRequest, dto.ValidationErrorResponse{
-			Error:  "Validation failed",
-			Fields: validationErrors,
-		})
-		return false
-	}
-	return true
-}
-
 func ValidateQuery(c *gin.Context, obj interface{}) bool {
 	if err := c.ShouldBindQuery(obj); err != nil {
 		validationErrors := make(map[string]string)
