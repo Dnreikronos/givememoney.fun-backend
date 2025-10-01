@@ -15,10 +15,6 @@ type SessionRepository struct {
 
 var _ interfaces.SessionRepositoryInterface = (*SessionRepository)(nil)
 
-func NewSessionRepository(db *gorm.DB) interfaces.SessionRepositoryInterface {
-	return &SessionRepository{db: db}
-}
-
 func (r *SessionRepository) CreateSession(session *model.Session) error {
 	return r.db.Create(session).Error
 }
