@@ -29,7 +29,7 @@ const (
 	ErrorCodeRateLimitExceeded ErrorCode = "RATE_LIMIT_EXCEEDED"
 
 	ErrorCodeExternalServiceError ErrorCode = "EXTERNAL_SERVICE_ERROR"
-	ErrorCodeProviderhAPIError    ErrorCode = "PROVIDER_API_ERROR"
+	ErrorCodeProviderAPIError     ErrorCode = "PROVIDER_API_ERROR"
 )
 
 type AppError struct {
@@ -90,7 +90,7 @@ func NewInternalError(message string, err error) *AppError {
 }
 
 func NewProviderAPIError(message string, err error) *AppError {
-	return NewAppError(ErrorCodeProviderhAPIError, message, err)
+	return NewAppError(ErrorCodeProviderAPIError, message, err)
 }
 
 func getDefaultStatusCode(code ErrorCode) int {
@@ -107,7 +107,7 @@ func getDefaultStatusCode(code ErrorCode) int {
 		return http.StatusTooManyRequests
 	case ErrorCodeServiceUnavailable:
 		return http.StatusServiceUnavailable
-	case ErrorCodeDatabaseError, ErrorCodeInternalError, ErrorCodeExternalServiceError, ErrorCodeProviderhAPIError:
+	case ErrorCodeDatabaseError, ErrorCodeInternalError, ErrorCodeExternalServiceError, ErrorCodeProviderAPIError:
 		return http.StatusInternalServerError
 	default:
 		return http.StatusInternalServerError
