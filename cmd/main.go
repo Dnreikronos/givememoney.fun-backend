@@ -8,7 +8,6 @@ import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/controller"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/database/connection"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
-	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
 	"github.com/gin-gonic/gin"
@@ -29,11 +28,8 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&model.Wallet{}, &model.Streamer{}, &model.Session{}, &model.RefreshToken{})
-	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
-	}
-
+	connection.RunMigration(db)
+	
 	loggerService, err := service.NewLoggerService()
 	if err != nil {
 		log.Fatal("Failed to initialize logger:", err)
