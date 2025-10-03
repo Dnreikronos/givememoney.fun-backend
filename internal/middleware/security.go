@@ -15,7 +15,6 @@ func SecurityMiddleware() gin.HandlerFunc {
 		if c.Request.Header.Get("X-Forwarded-Proto") == "https" || c.Request.TLS != nil {
 			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 		}
-
 		c.Next()
 	}
 }
