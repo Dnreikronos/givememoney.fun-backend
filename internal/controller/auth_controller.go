@@ -11,6 +11,7 @@ import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type AuthController struct {
