@@ -94,11 +94,11 @@ func (suite *ErrorsTestSuite) TestNewDatabaseError() {
 	assert.Equal(suite.T(), http.StatusInternalServerError, appErr.StatusCode)
 }
 
-func (suite *ErrorsTestSuite) TestNewTwitchAPIError() {
+func (suite *ErrorsTestSuite) TestNewCodeProviderAPIError() {
 	originalErr := errors.New("API rate limit exceeded")
-	appErr := appErrors.NewTwitchAPIError("Failed to get user info", originalErr)
+	appErr := appErrors.NewProviderAPIError("Failed to get user info", originalErr)
 
-	assert.Equal(suite.T(), appErrors.ErrorCodeTwitchAPIError, appErr.Code)
+	assert.Equal(suite.T(), appErrors.ErrorCodeProviderAPIError, appErr.Code)
 	assert.Equal(suite.T(), "Failed to get user info", appErr.Message)
 	assert.Equal(suite.T(), originalErr, appErr.Err)
 	assert.Equal(suite.T(), http.StatusInternalServerError, appErr.StatusCode)
@@ -157,7 +157,7 @@ func (suite *ErrorsTestSuite) TestDefaultStatusCodes() {
 		{appErrors.ErrorCodeDatabaseError, http.StatusInternalServerError},
 		{appErrors.ErrorCodeInternalError, http.StatusInternalServerError},
 		{appErrors.ErrorCodeExternalServiceError, http.StatusInternalServerError},
-		{appErrors.ErrorCodeTwitchAPIError, http.StatusInternalServerError},
+		{appErrors.ErrorCodeProviderAPIError, http.StatusInternalServerError},
 	}
 
 	for _, tc := range testCases {
