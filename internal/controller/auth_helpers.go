@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/dto"
