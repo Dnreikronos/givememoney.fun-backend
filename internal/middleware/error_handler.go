@@ -36,7 +36,7 @@ func handleAppError(c *gin.Context, appErr *errors.AppError, logger *zap.Logger)
 		fields = append(fields, zap.String("request_id", requestID))
 	}
 
-	if appErr.Context != nil && len(appErr.Context) > 0 {
+	if len(appErr.Context) > 0 {
 		fields = append(fields, zap.Any("context", appErr.Context))
 	}
 
