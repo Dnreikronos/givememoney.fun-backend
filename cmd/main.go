@@ -29,7 +29,7 @@ func main() {
 	}
 
 	connection.RunMigration(db)
-	
+
 	loggerService, err := service.NewLoggerService()
 	if err != nil {
 		log.Fatal("Failed to initialize logger:", err)
@@ -43,7 +43,10 @@ func main() {
 	jwtService := service.NewJWTService()
 	sessionService := service.NewSessionService(db, jwtService)
 
-	authController := controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger)
+	helpers := controller.NewAuthHelpers(sessionService, streamerRepo)
+	authController := controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger, helpers)
+	emailAuthController := controller.NewEmailAuthController(authService, jwtService, streamerRepo, helpers, logger)
+	sessionController := controller.NewSessionController(sessionService, jwtService, streamerRepo, helpers, logger)
 
 	router := gin.Default()
 
@@ -58,8 +61,6 @@ func main() {
 			{
 				twitch.GET("/login", authController.TwitchLogin)
 				twitch.GET("/callback", authController.TwitchCallback)
-				twitch.POST("/token", authController.TwitchToken)
-				twitch.GET("/user", authController.TwitchUser)
 			}
 
 			kick := auth.Group("/kick")
@@ -68,19 +69,14 @@ func main() {
 				kick.GET("/callback", authController.KickCallback)
 			}
 
-			// Email/password authentication endpoints
-			auth.POST("/register", middleware.AuthRateLimitMiddleware(), authController.EmailRegister)
-			auth.POST("/login", middleware.AuthRateLimitMiddleware(), authController.EmailLogin)
-
-			// General auth endpoints
-			auth.POST("/refresh", authController.RefreshToken)
-			auth.POST("/logout", authController.Logout)
-
-			// Session management endpoints
-			auth.POST("/session", authController.CreateSession)
-			auth.GET("/session", authController.GetSession)
-			auth.DELETE("/session", authController.DeleteSession)
-			auth.GET("/sessions", authController.GetActiveSessions)
+			auth.POST("/register", middleware.AuthRateLimitMiddleware(), emailAuthController.Register)
+			auth.POST("/login", middleware.AuthRateLimitMiddleware(), emailAuthController.Login)
+			auth.POST("/refresh", sessionController.Refresh)
+			auth.POST("/logout", sessionController.Logout)
+			auth.POST("/session", sessionController.Create)
+			auth.GET("/session", sessionController.Get)
+			auth.DELETE("/session", sessionController.Delete)
+			auth.GET("/sessions", sessionController.GetActive)
 		}
 	}
 
