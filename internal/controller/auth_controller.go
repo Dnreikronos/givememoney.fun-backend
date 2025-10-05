@@ -29,6 +29,7 @@ func NewAuthController(
 	sessionService *service.SessionService,
 	streamerRepo interfaces.StreamerRepositoryInterface,
 	logger *zap.Logger,
+	helpers *AuthHelpers,
 ) *AuthController {
 	return &AuthController{
 		authService:    authService,
