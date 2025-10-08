@@ -32,3 +32,10 @@ func (r *WalletRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.W
 	return &wallet, nil
 }
 
+func (r *WalletRepository) FindByHash(ctx context.Context, hash string) (*model.Wallet, error) {
+	var wallet model.Wallet
+	if err := r.db.WithContext(ctx).First(&wallet, "hash = ?", hash).Error; err != nil {
+		return nil, err
+	}
+	return &wallet, nil
+}
