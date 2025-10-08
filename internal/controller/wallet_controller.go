@@ -65,3 +65,17 @@ func (c *WalletController) GetByStreamer(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, wallets)
 }
+
+func (c *WalletController) Update(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+	}
+
+	var req model.WalletUpdateInput
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	ctx.JSON(http.StatusOK, id)
+}
