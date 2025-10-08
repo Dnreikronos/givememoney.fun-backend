@@ -79,3 +79,18 @@ func (c *WalletController) Update(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, id)
 }
+
+func (c *WalletController) Delete(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := c.walletService.Delete(ctx, id); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.Status(http.StatusNoContent)
+}
