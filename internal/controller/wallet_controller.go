@@ -34,3 +34,19 @@ func (c *WalletController) Create(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusCreated, wallet)
 }
+
+func (c *WalletController) GetByID(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	wallet, err := c.walletService.GetByID(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid wallet"})
+	}
+
+	ctx.JSON(http.StatusOK, wallet)
+}
+
