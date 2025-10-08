@@ -20,3 +20,6 @@ func (s *WalletService) GetByID(ctx context.Context, id uuid.UUID) (*model.Walle
 	return s.walletRepo.FindByID(ctx, id)
 }
 
+func (s *WalletService) GetByHash(ctx context.Context, hash string) (*model.Wallet, error) {
+	return s.walletRepo.FindByHash(ctx, hash)
+}
