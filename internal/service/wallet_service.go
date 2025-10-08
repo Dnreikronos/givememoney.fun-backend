@@ -27,3 +27,13 @@ func (s *WalletService) GetByHash(ctx context.Context, hash string) (*model.Wall
 func (s *WalletService) GetByStreamerID(ctx context.Context, streamerID uuid.UUID) ([]model.Wallet, error) {
 	return s.walletRepo.FindByStreamerID(ctx, streamerID)
 }
+
+func (s *WalletService) Update(ctx context.Context, id uuid.UUID, req *model.WalletUpdateInput) (*model.Wallet, error) {
+	wallet, err := s.walletRepo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	wallet.Hash = req.Hash
+	return s.walletRepo.Update(ctx, wallet)
+}
