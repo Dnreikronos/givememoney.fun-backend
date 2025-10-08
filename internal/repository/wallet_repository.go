@@ -47,3 +47,14 @@ func (r *WalletRepository) FindByStreamerID(ctx context.Context, streamerID uuid
 	}
 	return wallets, nil
 }
+
+func (r *WalletRepository) Update(ctx context.Context, wallet *model.Wallet) (*model.Wallet, error) {
+	if err := r.db.WithContext(ctx).Save(wallet).Error; err != nil {
+		return nil, err
+	}
+	return wallet, nil
+}
+
+func (r *WalletRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return r.db.WithContext(ctx).Delete(&model.Wallet{}, "id = ?", id).Error
+}
