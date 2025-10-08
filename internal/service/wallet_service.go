@@ -15,3 +15,8 @@ func (s *WalletService) Create(ctx context.Context, streamerID uuid.UUID, req *m
 	}
 	return s.walletRepo.Create(ctx, wallet)
 }
+
+func (s *WalletService) GetByID(ctx context.Context, id uuid.UUID) (*model.Wallet, error) {
+	return s.walletRepo.FindByID(ctx, id)
+}
+
