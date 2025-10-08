@@ -1,3 +1,14 @@
+package service
+
+import (
+	"context"
+
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
+
+	"github.com/google/uuid"
+)
+
 type WalletService struct {
 	walletRepo *repository.WalletRepository
 }
@@ -36,4 +47,8 @@ func (s *WalletService) Update(ctx context.Context, id uuid.UUID, req *model.Wal
 
 	wallet.Hash = req.Hash
 	return s.walletRepo.Update(ctx, wallet)
+}
+
+func (s *WalletService) Delete(ctx context.Context, id uuid.UUID) error {
+	return s.walletRepo.Delete(ctx, id)
 }
