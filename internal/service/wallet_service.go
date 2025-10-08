@@ -23,3 +23,7 @@ func (s *WalletService) GetByID(ctx context.Context, id uuid.UUID) (*model.Walle
 func (s *WalletService) GetByHash(ctx context.Context, hash string) (*model.Wallet, error) {
 	return s.walletRepo.FindByHash(ctx, hash)
 }
+
+func (s *WalletService) GetByStreamerID(ctx context.Context, streamerID uuid.UUID) ([]model.Wallet, error) {
+	return s.walletRepo.FindByStreamerID(ctx, streamerID)
+}
