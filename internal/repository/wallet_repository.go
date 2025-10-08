@@ -39,3 +39,11 @@ func (r *WalletRepository) FindByHash(ctx context.Context, hash string) (*model.
 	}
 	return &wallet, nil
 }
+
+func (r *WalletRepository) FindByStreamerID(ctx context.Context, streamerID uuid.UUID) ([]model.Wallet, error) {
+	var wallets []model.Wallet
+	if err := r.db.WithContext(ctx).Where("streamer_id = ?", streamerID).Find(&wallets).Error; err != nil {
+		return nil, err
+	}
+	return wallets, nil
+}
