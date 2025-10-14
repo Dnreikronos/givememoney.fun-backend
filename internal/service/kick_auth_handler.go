@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type KickAuthHandler struct {
 	redirectURL  string
 	stateStore   *StateStore
 	pkceStore    map[string]string // state -> codeVerifier mapping
+	pkceMutex    sync.RWMutex
 }
 
 func NewKickAuthHandler() *KickAuthHandler {
@@ -51,7 +53,9 @@ func (k *KickAuthHandler) GenerateAuthURL() string {
 
 	// Store state and code verifier
 	k.stateStore.Add(state)
+	k.pkceMutex.Lock()
 	k.pkceStore[state] = codeVerifier
+	k.pkceMutex.Unlock()
 
 	params := url.Values{
 		"client_id":             {k.clientID},
@@ -76,19 +80,19 @@ func (k *KickAuthHandler) ExchangeCode(ctx context.Context, code string, state s
 	}
 
 	var codeVerifier string
-	if state != "" {
-		var exists bool
-		codeVerifier, exists = k.pkceStore[state]
-		if !exists {
-			return "", fmt.Errorf("invalid state or PKCE data not found")
-		}
-		// Clean up PKCE data
-		delete(k.pkceStore, state)
-	} else {
-		// For compatibility with AuthProvider interface when state is empty
-		// This should not be used in production - always use state validation
-		codeVerifier = generateCodeVerifier()
+	if state == "" {
+		return "", fmt.Errorf("state parameter is required for PKCE exchange")
 	}
+
+	k.pkceMutex.Lock()
+	codeVerifier, exists := k.pkceStore[state]
+	if !exists {
+		k.pkceMutex.Unlock()
+		return "", fmt.Errorf("invalid state or PKCE data not found")
+	}
+	// Clean up PKCE data
+	delete(k.pkceStore, state)
+	k.pkceMutex.Unlock()
 
 	data := url.Values{
 		"client_id":     {k.clientID},

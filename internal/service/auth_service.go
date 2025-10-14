@@ -70,14 +70,19 @@ func (s *AuthService) RegisterWithEmail(ctx context.Context, name, email, passwo
 	}
 
 	streamer := &model.Streamer{
-		Provider:     utils.ProviderTwitch, // Using a default provider for email users
-		ProviderID:   email,                // Using email as ProviderID for email auth
+		Provider:     utils.ProviderEmail,
+		ProviderID:   email,
 		Name:         name,
 		Email:        email,
 		PasswordHash: &hashedPassword,
 	}
 
-	createdStreamer, err := s.streamerRepo.FindByID(ctx, streamer.ID)
+	if err := s.streamerRepo.CreateStreamer(ctx, streamer); err != nil {
+		log.Printf("Failed to create streamer: %v", err)
+		return nil, fmt.Errorf("failed to create streamer: %w", err)
+	}
+
+	createdStreamer, err := s.streamerRepo.FindByEmail(ctx, email)
 	if err != nil {
 		log.Printf("Failed to reload streamer: %v", err)
 		return nil, fmt.Errorf("failed to reload streamer: %w", err)

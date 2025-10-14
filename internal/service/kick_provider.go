@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
 )
@@ -21,9 +22,7 @@ func (p *KickProvider) GetAuthURL() string {
 }
 
 func (p *KickProvider) ExchangeCode(ctx context.Context, code string) (string, error) {
-	// For compatibility with AuthProvider interface, use empty state
-	// Real state validation will be done in the controller layer
-	return p.handler.ExchangeCode(ctx, code, "")
+	return "", fmt.Errorf("state parameter required for Kick PKCE flow")
 }
 
 func (p *KickProvider) GetUser(ctx context.Context, token string) (utils.ProviderUser, error) {

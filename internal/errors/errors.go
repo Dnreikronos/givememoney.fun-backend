@@ -29,7 +29,7 @@ const (
 	ErrorCodeRateLimitExceeded ErrorCode = "RATE_LIMIT_EXCEEDED"
 
 	ErrorCodeExternalServiceError ErrorCode = "EXTERNAL_SERVICE_ERROR"
-	ErrorCodeTwitchAPIError       ErrorCode = "TWITCH_API_ERROR"
+	ErrorCodeProviderAPIError     ErrorCode = "PROVIDER_API_ERROR"
 )
 
 type AppError struct {
@@ -89,8 +89,8 @@ func NewInternalError(message string, err error) *AppError {
 	return NewAppError(ErrorCodeInternalError, message, err)
 }
 
-func NewTwitchAPIError(message string, err error) *AppError {
-	return NewAppError(ErrorCodeTwitchAPIError, message, err)
+func NewProviderAPIError(message string, err error) *AppError {
+	return NewAppError(ErrorCodeProviderAPIError, message, err)
 }
 
 func getDefaultStatusCode(code ErrorCode) int {
@@ -107,7 +107,7 @@ func getDefaultStatusCode(code ErrorCode) int {
 		return http.StatusTooManyRequests
 	case ErrorCodeServiceUnavailable:
 		return http.StatusServiceUnavailable
-	case ErrorCodeDatabaseError, ErrorCodeInternalError, ErrorCodeExternalServiceError, ErrorCodeTwitchAPIError:
+	case ErrorCodeDatabaseError, ErrorCodeInternalError, ErrorCodeExternalServiceError, ErrorCodeProviderAPIError:
 		return http.StatusInternalServerError
 	default:
 		return http.StatusInternalServerError

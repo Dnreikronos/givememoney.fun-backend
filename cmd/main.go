@@ -8,7 +8,6 @@ import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/controller"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/database/connection"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
-	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
 	"github.com/gin-gonic/gin"
@@ -29,13 +28,8 @@ func main() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	err = db.AutoMigrate(&model.Wallet{}, &model.Streamer{}, &model.Session{}, &model.RefreshToken{})
-	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
-	}
-	log.Println("Database migration completed successfully")
+	connection.RunMigration(db)
 
-	// Initialize logger
 	loggerService, err := service.NewLoggerService()
 	if err != nil {
 		log.Fatal("Failed to initialize logger:", err)
@@ -43,16 +37,16 @@ func main() {
 	logger := loggerService.GetLogger()
 	defer loggerService.Sync()
 
-	// Initialize repositories
 	streamerRepo := repository.NewStreamerRepository(db)
 
-	// Initialize services
 	authService := service.NewAuthService(streamerRepo)
 	jwtService := service.NewJWTService()
 	sessionService := service.NewSessionService(db, jwtService)
 
-	// Initialize controllers
-	authController := controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger)
+	helpers := controller.NewAuthHelpers(sessionService, streamerRepo)
+	authController := controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger, helpers)
+	emailAuthController := controller.NewEmailAuthController(authService, jwtService, streamerRepo, helpers, logger)
+	sessionController := controller.NewSessionController(sessionService, jwtService, streamerRepo, helpers, logger)
 
 	router := gin.Default()
 
@@ -67,7 +61,6 @@ func main() {
 			{
 				twitch.GET("/login", authController.TwitchLogin)
 				twitch.GET("/callback", authController.TwitchCallback)
-				twitch.POST("/token", authController.TwitchToken)
 				twitch.GET("/user", authController.TwitchUser)
 			}
 
@@ -75,21 +68,17 @@ func main() {
 			{
 				kick.GET("/login", authController.KickLogin)
 				kick.GET("/callback", authController.KickCallback)
+				kick.GET("/user", authController.KickUser)
 			}
 
-			// Email/password authentication endpoints
-			auth.POST("/register", middleware.AuthRateLimitMiddleware(), authController.EmailRegister)
-			auth.POST("/login", middleware.AuthRateLimitMiddleware(), authController.EmailLogin)
-
-			// General auth endpoints
-			auth.POST("/refresh", authController.RefreshToken)
-			auth.POST("/logout", authController.Logout)
-
-			// Session management endpoints
-			auth.POST("/session", authController.CreateSession)
-			auth.GET("/session", authController.GetSession)
-			auth.DELETE("/session", authController.DeleteSession)
-			auth.GET("/sessions", authController.GetActiveSessions)
+			auth.POST("/register", middleware.AuthRateLimitMiddleware(), emailAuthController.Register)
+			auth.POST("/login", middleware.AuthRateLimitMiddleware(), emailAuthController.Login)
+			auth.POST("/refresh", sessionController.Refresh)
+			auth.POST("/logout", sessionController.Logout)
+			auth.POST("/session", sessionController.Create)
+			auth.GET("/session", sessionController.Get)
+			auth.DELETE("/session", sessionController.Delete)
+			auth.GET("/sessions", sessionController.GetActive)
 		}
 	}
 

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -13,60 +12,21 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type DBConfig struct {
-	MaxIdleConns    int
-	MaxOpenConns    int
-	ConnMaxLifetime time.Duration
-	ConnMaxIdleTime time.Duration
-}
-
-func getDBConfig() DBConfig {
-	config := DBConfig{
-		MaxIdleConns:    10, // Default idle connections
-		MaxOpenConns:    25, // Default max connections
-		ConnMaxLifetime: 5 * time.Minute,
-		ConnMaxIdleTime: 5 * time.Minute,
-	}
-
-	if val, exists := os.LookupEnv("DB_MAX_IDLE_CONNS"); exists {
-		if parsed, err := strconv.Atoi(val); err == nil {
-			config.MaxIdleConns = parsed
-		}
-	}
-
-	if val, exists := os.LookupEnv("DB_MAX_OPEN_CONNS"); exists {
-		if parsed, err := strconv.Atoi(val); err == nil {
-			config.MaxOpenConns = parsed
-		}
-	}
-
-	if val, exists := os.LookupEnv("DB_CONN_MAX_LIFETIME_MINUTES"); exists {
-		if parsed, err := strconv.Atoi(val); err == nil {
-			config.ConnMaxLifetime = time.Duration(parsed) * time.Minute
-		}
-	}
-
-	return config
-}
-
 func OpenConnection() (*gorm.DB, error) {
 	dsn := os.Getenv("POSTGRES_SOURCE")
 	if dsn == "" {
 		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable TimeZone=%s",
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 			os.Getenv("DB_HOST"),
 			os.Getenv("DB_PORT"),
 			os.Getenv("DB_USER"),
 			os.Getenv("POSTGRES_PASSWORD"),
 			os.Getenv("DB_NAME"),
-			os.Getenv("POSTGRES_TIME_ZONE"),
 		)
 	}
 
-	// Configure GORM with optimized settings
 	config := &gorm.Config{
-		PrepareStmt: true,
-		Logger:      logger.Default.LogMode(logger.Error),
+		Logger: logger.Default.LogMode(logger.Error),
 	}
 
 	db, err := gorm.Open(postgres.Open(dsn), config)
@@ -79,12 +39,6 @@ func OpenConnection() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
 	}
 
-	dbConfig := getDBConfig()
-	sqlDB.SetMaxIdleConns(dbConfig.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(dbConfig.MaxOpenConns)
-	sqlDB.SetConnMaxLifetime(dbConfig.ConnMaxLifetime)
-	sqlDB.SetConnMaxIdleTime(dbConfig.ConnMaxIdleTime)
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -92,8 +46,7 @@ func OpenConnection() (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	log.Printf("Successfully connected to the database with pool config: MaxIdle=%d, MaxOpen=%d, MaxLifetime=%v",
-		dbConfig.MaxIdleConns, dbConfig.MaxOpenConns, dbConfig.ConnMaxLifetime)
+	log.Printf("Successfully connected to the database")
 
 	return db, nil
 }

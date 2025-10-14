@@ -8,7 +8,7 @@ import (
 )
 
 type Session struct {
-	ID             uuid.UUID  `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ID             uuid.UUID  `gorm:"type:uuid;primary_key" json:"id"`
 	StreamerID     uuid.UUID  `gorm:"type:uuid;not null;index" json:"streamer_id"`
 	SessionToken   string     `gorm:"type:varchar(255);not null;unique" json:"session_token"`
 	RefreshTokenID *uuid.UUID `gorm:"type:uuid;index" json:"refresh_token_id,omitempty"`

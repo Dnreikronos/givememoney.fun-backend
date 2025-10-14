@@ -32,7 +32,6 @@ var (
 	hasNumber    = regexp.MustCompile(`[0-9]`)
 )
 
-// HashPassword generates a bcrypt hash of the given password
 func HashPassword(password string) (string, error) {
 	if err := ValidatePasswordStrength(password); err != nil {
 		return "", err
@@ -66,7 +65,6 @@ func ValidatePasswordStrength(password string) error {
 		return ErrPasswordTooLong
 	}
 
-	// Check for required character types
 	if !hasLowerCase.MatchString(password) {
 		return ErrPasswordTooWeak
 	}
@@ -80,8 +78,4 @@ func ValidatePasswordStrength(password string) error {
 	}
 
 	return nil
-}
-
-func IsPasswordSecure(password string) bool {
-	return ValidatePasswordStrength(password) == nil
 }

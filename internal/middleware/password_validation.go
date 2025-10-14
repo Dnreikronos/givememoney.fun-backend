@@ -31,10 +31,3 @@ func ValidateRegisterRequest(c *gin.Context, req *dto.RegisterRequest) bool {
 
 	return true
 }
-
-func ValidatePasswordStrengthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Next()
-	}
-}
-g

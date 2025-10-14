@@ -30,7 +30,6 @@ func (p *TwitchProvider) GetUser(ctx context.Context, token string) (utils.Provi
 		return utils.ProviderUser{}, err
 	}
 
-	// Convert TwitchUser to ProviderUser
 	return utils.ProviderUser{
 		ID:    twitchUser.ID,
 		Name:  twitchUser.DisplayName,
