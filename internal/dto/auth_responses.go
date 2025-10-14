@@ -13,13 +13,13 @@ type AuthResponse struct {
 }
 
 type UserInfo struct {
-	ID          uuid.UUID `json:"id"`
-	DisplayName string    `json:"display_name"`
-	Username    string    `json:"username"`
-	Provider    string    `json:"provider"`
-	ProviderID  string    `json:"provider_id"`
-	AvatarURL   string    `json:"avatar_url,omitempty"`
-	Wallet      *Wallet   `json:"wallet,omitempty"`
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	Provider   string    `json:"provider"`
+	ProviderID string    `json:"provider_id"`
+	AvatarURL  string    `json:"avatar_url,omitempty"`
+	Wallet     *Wallet   `json:"wallet,omitempty"`
 }
 
 type Wallet struct {

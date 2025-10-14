@@ -61,12 +61,14 @@ func main() {
 			{
 				twitch.GET("/login", authController.TwitchLogin)
 				twitch.GET("/callback", authController.TwitchCallback)
+				twitch.GET("/user", authController.TwitchUser)
 			}
 
 			kick := auth.Group("/kick")
 			{
 				kick.GET("/login", authController.KickLogin)
 				kick.GET("/callback", authController.KickCallback)
+				kick.GET("/user", authController.KickUser)
 			}
 
 			auth.POST("/register", middleware.AuthRateLimitMiddleware(), emailAuthController.Register)

@@ -3,6 +3,8 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/dto"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/errors"
@@ -105,7 +107,8 @@ func (c *AuthController) TwitchCallback(ctx *gin.Context) {
 		zap.String("provider", string(streamer.Provider)),
 	)
 
-	ctx.Redirect(http.StatusFound, fmt.Sprintf("%/dashboard", frontendURL))
+	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, url.QueryEscape(tokenPair.AccessToken))
+	ctx.Redirect(http.StatusFound, redirectURL)
 }
 
 func (c *AuthController) KickCallback(ctx *gin.Context) {
@@ -129,6 +132,12 @@ func (c *AuthController) KickCallback(ctx *gin.Context) {
 	kickProvider, ok := provider.(*service.KickProvider)
 	if !ok {
 		c.logger.Error("Failed to cast provider to KickProvider")
+		ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=invalid_state", frontendURL))
+		return
+	}
+
+	if !kickProvider.ValidateState(req.State) {
+		c.logger.Warn("Kick state validation failed", zap.String("state", req.State))
 		ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=invalid_state", frontendURL))
 		return
 	}
@@ -167,5 +176,68 @@ func (c *AuthController) KickCallback(ctx *gin.Context) {
 		zap.String("streamer_id", streamer.ID.String()),
 		zap.String("provider", string(streamer.Provider)),
 	)
-	ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/dashboard", frontendURL))
+	redirectURL := fmt.Sprintf("%s/dashboard?token=%s", frontendURL, url.QueryEscape(tokenPair.AccessToken))
+	ctx.Redirect(http.StatusFound, redirectURL)
+}
+
+func (c *AuthController) TwitchUser(ctx *gin.Context) {
+	c.handleUserProfile(ctx, utils.ProviderTwitch)
+}
+
+func (c *AuthController) KickUser(ctx *gin.Context) {
+	c.handleUserProfile(ctx, utils.ProviderKick)
+}
+
+func (c *AuthController) handleUserProfile(ctx *gin.Context, expectedProvider utils.StreamerProvider) {
+	token, err := extractBearerToken(ctx.GetHeader("Authorization"))
+	if err != nil {
+		c.logger.Warn("Authorization header missing or invalid", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	claims, err := c.jwtService.ValidateAccessToken(token)
+	if err != nil {
+		c.logger.Warn("Failed to validate access token", zap.Error(err))
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "invalid_token"})
+		return
+	}
+
+	if expectedProvider != "" && claims.Provider != string(expectedProvider) {
+		c.logger.Warn("Provider mismatch for profile request",
+			zap.String("expected", string(expectedProvider)),
+			zap.String("actual", claims.Provider),
+		)
+		ctx.JSON(http.StatusForbidden, gin.H{"error": "provider_mismatch"})
+		return
+	}
+
+	streamer, err := c.streamerRepo.FindByID(ctx.Request.Context(), claims.UserID)
+	if err != nil {
+		c.logger.Error("Streamer not found for profile request", zap.Error(err))
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "user_not_found"})
+		return
+	}
+
+	userResponse := c.helpers.GetUserResponse(streamer)
+	ctx.JSON(http.StatusOK, gin.H{
+		"user": userResponse,
+	})
+}
+
+func extractBearerToken(header string) (string, error) {
+	if header == "" {
+		return "", fmt.Errorf("authorization header not provided")
+	}
+
+	if !strings.HasPrefix(strings.ToLower(header), "bearer ") {
+		return "", fmt.Errorf("invalid authorization scheme")
+	}
+
+	token := strings.TrimSpace(header[len("Bearer "):])
+	if token == "" {
+		return "", fmt.Errorf("bearer token is empty")
+	}
+
+	return token, nil
 }
