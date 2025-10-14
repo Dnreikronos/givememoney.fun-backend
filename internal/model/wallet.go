@@ -11,7 +11,7 @@ type WalletUpdateInput struct {
 	Hash string `json:"hash" validate:"required,len=64"`
 }
 
-type WalletInput struct {
+type WalletRequest struct {
 	WalletProvider utils.WalletProvider `json:"wallet_provider" validate:"required"`
 	Hash           string               `json:"hash" validate:"required,len=64"`
 }
@@ -21,6 +21,8 @@ type Wallet struct {
 	WalletProvider   utils.WalletProvider `json:"wallet_provider" gorm:"not null;type:varchar(50)"`
 	WalletProviderID string               `json:"wallet_provider_id" gorm:"not null;size:255;index:idx_wallet_provider_id"`
 	Hash             string               `json:"hash" gorm:"not null;size:64;unique"`
+	StreamerID       uuid.UUID            `json:"stramer_id" gorm:"type:uuid;not null;index"`
+	Streamer         Streamer             `json:"stramer" gorm:"foreignKey:StreamerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	CreatedAt        time.Time            `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt        time.Time            `json:"updated_at" gorm:"autoUpdateTime"`
 }
