@@ -62,9 +62,9 @@ func (h *AuthHelpers) GetUserResponse(streamer *model.Streamer) dto.UserInfo {
 	var walletResponse *dto.Wallet
 	if streamer.Wallet != nil {
 		walletResponse = &dto.Wallet{
-			ID:       streamer.Wallet.ID,
-			Provider: string(streamer.Wallet.WalletProvider),
-			Hash:     streamer.Wallet.Hash,
+			ID:            streamer.Wallet.ID,
+			Provider:      string(streamer.Wallet.WalletProvider),
+			WalletAddress: streamer.Wallet.WalletAddress,
 		}
 	}
 
