@@ -19,7 +19,7 @@ type UserInfo struct {
 	Provider   string    `json:"provider"`
 	ProviderID string    `json:"provider_id"`
 	AvatarURL  string    `json:"avatar_url,omitempty"`
-	Wallet     *Wallet   `json:"wallet,omitempty"`
+	Wallets    []Wallet  `json:"wallets,omitempty"`
 }
 
 type Wallet struct {
