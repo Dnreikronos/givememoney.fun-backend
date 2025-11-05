@@ -14,7 +14,6 @@ type Streamer struct {
 	Name         string                 `json:"name,omitempty"`
 	Email        string                 `json:"email"`
 	PasswordHash *string                `json:"-" gorm:"type:varchar(255);default:null"`
-	Wallet       *Wallet                `json:"wallet,omitempty" gorm:"foreignKey:StreamerID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
 	CreatedAt    time.Time              `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time              `json:"updated_at" gorm:"autoUpdateTime"`
 }
