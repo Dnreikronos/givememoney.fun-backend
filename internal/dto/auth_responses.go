@@ -19,13 +19,13 @@ type UserInfo struct {
 	Provider   string    `json:"provider"`
 	ProviderID string    `json:"provider_id"`
 	AvatarURL  string    `json:"avatar_url,omitempty"`
-	Wallet     *Wallet   `json:"wallet,omitempty"`
+	Wallets    []Wallet  `json:"wallets,omitempty"`
 }
 
 type Wallet struct {
-	ID       uuid.UUID `json:"id"`
-	Provider string    `json:"provider"`
-	Hash     string    `json:"hash"`
+	ID            uuid.UUID `json:"id"`
+	Provider      string    `json:"provider"`
+	WalletAddress string    `json:"wallet_address"`
 }
 type ErrorResponse struct {
 	Error   string            `json:"error"`
