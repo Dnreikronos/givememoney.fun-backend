@@ -23,9 +23,9 @@ type UserInfo struct {
 }
 
 type Wallet struct {
-	ID       uuid.UUID `json:"id"`
-	Provider string    `json:"provider"`
-	Hash     string    `json:"hash"`
+	ID            uuid.UUID `json:"id"`
+	Provider      string    `json:"provider"`
+	WalletAddress string    `json:"wallet_address"`
 }
 type ErrorResponse struct {
 	Error   string            `json:"error"`
