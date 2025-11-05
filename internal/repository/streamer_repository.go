@@ -26,9 +26,9 @@ func (r *StreamerRepository) FindByProvider(ctx context.Context, provider utils.
 	if err != nil {
 		return nil, err
 	}
-	if err := r.loadWallet(ctx, &streamer); err != nil {
-		return nil, err
-	}
+	// if err := r.loadWallet(ctx, &streamer); err != nil {
+	// 	return nil, err
+	// }
 	return &streamer, nil
 }
 
@@ -38,9 +38,9 @@ func (r *StreamerRepository) FindByID(ctx context.Context, id uuid.UUID) (*model
 	if err != nil {
 		return nil, err
 	}
-	if err := r.loadWallet(ctx, &streamer); err != nil {
-		return nil, err
-	}
+	// if err := r.loadWallet(ctx, &streamer); err != nil {
+	// 	return nil, err
+	// }
 	return &streamer, nil
 }
 
@@ -50,9 +50,9 @@ func (r *StreamerRepository) FindByEmail(ctx context.Context, email string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	if err := r.loadWallet(ctx, &streamer); err != nil {
-		return nil, err
-	}
+	// if err := r.loadWallet(ctx, &streamer); err != nil {
+	// 	return nil, err
+	// }
 	return &streamer, nil
 }
 
@@ -77,21 +77,23 @@ func (r *StreamerRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.db.WithContext(ctx).Delete(&model.Streamer{}, id).Error
 }
 
-func (r *StreamerRepository) loadWallet(ctx context.Context, streamer *model.Streamer) error {
-	if streamer == nil {
-		return nil
-	}
+//TODO: adjust the loadWallet to load directly from the wallet model as the relationship of streamer with wallet it's just on the wallet side
 
-	var wallet model.Wallet
-	err := r.db.WithContext(ctx).Where("streamer_id = ?", streamer.ID).First(&wallet).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			streamer.Wallet = nil
-			return nil
-		}
-		return err
-	}
+// func (r *StreamerRepository) loadWallet(ctx context.Context, streamer *model.Streamer) error {
+// 	if streamer == nil {
+// 		return nil
+// 	}
 
-	streamer.Wallet = &wallet
-	return nil
-}
+// 	var wallet model.Wallet
+// 	err := r.db.WithContext(ctx).Where("streamer_id = ?", streamer.ID).First(&wallet).Error
+// 	if err != nil {
+// 		if err == gorm.ErrRecordNotFound {
+// 			streamer.Wallet = nil
+// 			return nil
+// 		}
+// 		return err
+// 	}
+
+// 	streamer.Wallet = &wallet
+// 	return nil
+// }

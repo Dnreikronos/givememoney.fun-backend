@@ -16,7 +16,7 @@ type Session struct {
 	IsActive       bool       `gorm:"default:true" json:"is_active"`
 	CreatedAt      time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
-	LastAccessedAt time.Time  `gorm:"autoCreateTime" json:"last_accessed_at"`
+	LastAccessedAt time.Time  `gorm:"autoUpdateTime" json:"last_accessed_at"`
 	UserAgent      string     `gorm:"type:text" json:"user_agent,omitempty"`
 	IPAddress      string     `gorm:"type:varchar(45)" json:"ip_address,omitempty"`
 	Country        string     `gorm:"type:varchar(2)" json:"country,omitempty"`
