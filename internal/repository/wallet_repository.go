@@ -26,15 +26,15 @@ func (r *WalletRepository) Create(ctx context.Context, wallet *model.Wallet) (*m
 
 func (r *WalletRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Wallet, error) {
 	var wallet model.Wallet
-	if err := r.db.WithContext(ctx).First(&wallet, "hashy = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&wallet, "wallet_address = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &wallet, nil
 }
 
-func (r *WalletRepository) FindByHash(ctx context.Context, hash string) (*model.Wallet, error) {
+func (r *WalletRepository) FindByWalletAddress(ctx context.Context, walletAddress string) (*model.Wallet, error) {
 	var wallet model.Wallet
-	if err := r.db.WithContext(ctx).First(&wallet, "hash = ?", hash).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&wallet, "wallet_address = ?", walletAddress).Error; err != nil {
 		return nil, err
 	}
 	return &wallet, nil
