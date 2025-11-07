@@ -9,6 +9,7 @@ Type of Change
 [ ] Feature implementation
 [ ] Performance improvement
 [ ] Refactoring
+[ ] Chore
 [ ] Documentation
 [ ] Tests
 [ ] CI/CD
