@@ -59,3 +59,11 @@ func (tr *TransactionRepository) FindByStreamerID(ctx context.Context, streamerI
 
 	return &transactions, nil
 }
+
+func (tr *TransactionRepository) Update(ctx context.Context, transaction *model.Transaction) (*model.Transaction, error) {
+	if err := tr.db.WithContext(ctx).Save(transaction).Error; err != nil {
+		return nil, err
+	}
+
+	return transaction, nil
+}
