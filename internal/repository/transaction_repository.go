@@ -33,3 +33,11 @@ func (tr *TransactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*m
 	return &transaction, nil
 }
 
+func (tr *TransactionRepository) FindAll(ctx context.Context) (*[]model.Transaction, error) {
+	var transactions []model.Transaction
+	if err := tr.db.WithContext(ctx).Find(&transactions).Error; err != nil {
+		return nil, err
+	}
+
+	return &transactions, nil
+}
