@@ -67,3 +67,8 @@ func (tr *TransactionRepository) Update(ctx context.Context, transaction *model.
 
 	return transaction, nil
 }
+
+
+func (tr *TransactionRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return err := tr.db.WithContext(ctx).Delete(&model.Transaction{}, "id = ?", id).Error
+}
