@@ -23,3 +23,13 @@ func (tr *TransactionRepository) Create(ctx context.Context, transaction *model.
 	return transaction, nil
 }
 
+func (tr *TransactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error) {
+	var transaction model.Transaction
+	if err := tr.db.WithContext(ctx).First(&transaction, id).Error; err != nil {
+		re
+		turn nil, err
+	}
+
+	return &transaction, nil
+}
+
