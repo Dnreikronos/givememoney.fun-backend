@@ -23,10 +23,11 @@ type UserInfo struct {
 }
 
 type Wallet struct {
-	ID            uuid.UUID `json:"id"`
-	Provider      string    `json:"provider"`
-	WalletAddress string    `json:"wallet_address"`
+	ID             uuid.UUID `json:"id"`
+	WalletProvider string    `json:"wallet_provider"`
+	WalletAddress  string    `json:"wallet_address"`
 }
+
 type ErrorResponse struct {
 	Error   string            `json:"error"`
 	Message string            `json:"message,omitempty"`
