@@ -41,3 +41,12 @@ func (tr *TransactionRepository) FindAll(ctx context.Context) (*[]model.Transact
 
 	return &transactions, nil
 }
+
+func (tr *TransactionRepository) FindByWalletID(ctx context.Context, walletID uuid.UUID) (*[]model.Transaction, error) {
+	var transactions []model.Transaction
+	if err := tr.db.WithContext(ctx).Where("wallet_id = ?", walletID).Find(&transactions).Error; err != nil {
+		return nil, err
+	}
+
+	return &transactions, nil
+}
