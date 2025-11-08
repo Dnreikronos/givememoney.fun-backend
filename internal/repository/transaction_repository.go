@@ -50,3 +50,12 @@ func (tr *TransactionRepository) FindByWalletID(ctx context.Context, walletID uu
 
 	return &transactions, nil
 }
+
+func (tr *TransactionRepository) FindByStreamerID(ctx context.Context, streamerID uuid.UUID) (*[]model.Transaction, error) {
+	var transactions []model.Transaction
+	if err := tr.db.WithContext(ctx).Where("streamer_id = ?", streamerID).Find(&transactions).Error; err != nil {
+		return nil, err
+	}
+
+	return &transactions, nil
+}
