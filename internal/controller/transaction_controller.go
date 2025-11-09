@@ -78,3 +78,19 @@ func (c *TransactionController) GetByWalletID(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, transactions)
 }
+
+func (c *TransactionController) GetByStreamerID(ctx *gin.Context) {
+	streamerID, err := uuid.Parse(ctx.Param("streamer_id"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	transactions, err := c.transactionService.GetByStreamerID(ctx, streamerID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, transactions)
+}
