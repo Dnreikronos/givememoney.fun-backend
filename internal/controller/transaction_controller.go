@@ -63,3 +63,18 @@ func (c *TransactionController) GetAllTransactions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, transactions)
 }
 
+func (c *TransactionController) GetByWalletID(ctx *gin.Context) {
+	walletID, err := uuid.Parse(ctx.Param("address_to_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wallet ID"})
+		return
+	}
+
+	transactions, err := c.transactionService.GetByWalletID(ctx, walletID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, transactions)
+}
