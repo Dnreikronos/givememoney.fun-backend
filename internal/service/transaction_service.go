@@ -29,3 +29,7 @@ func (s *TransactionService) Create(ctx context.Context, walletID uuid.UUID, req
 		}
 	return s.transactionRepo.Create(ctx, transaction)
 }
+
+func (s *TransactionService) GetByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error) {
+	return s.transactionRepo.FindByID(ctx, id)
+}
