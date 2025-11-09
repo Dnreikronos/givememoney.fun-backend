@@ -6,7 +6,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type TransactionRequest struct {
+	Amount      float64 `json:"amount" validate:"required"`
 	Message     string  `json:"message"`
+	TxHash      string  `json:"tx_hash" validate:"required"`
+	AddressFrom string  `json:"address_from" validate:"required"`
+}
+
 type Transaction struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	AddressFrom string    `json:"address_from" gorm:"type:string;not null"`
