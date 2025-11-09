@@ -21,8 +21,9 @@ func NewWalletService(walletRepo *repository.WalletRepository) *WalletService {
 
 func (s *WalletService) Create(ctx context.Context, streamerID uuid.UUID, req *model.WalletRequest) (*model.Wallet, error) {
 	wallet := &model.Wallet{
-		WalletAddress: req.WalletAddress,
-		StreamerID:    streamerID,
+		WalletAddress:  req.WalletAddress,
+		StreamerID:     streamerID,
+		WalletProvider: req.WalletProvider,
 	}
 	return s.walletRepo.Create(ctx, wallet)
 }
