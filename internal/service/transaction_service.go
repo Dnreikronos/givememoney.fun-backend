@@ -17,3 +17,15 @@ func NewTransactionService(transactionRepo *repository.TransactionRepository) *T
 		transactionRepo: transactionRepo,
 	}
 }
+
+func (s *TransactionService) Create(ctx context.Context, walletID uuid.UUID, req *model.TransactionRequest) (*model.Transaction, error) {
+	transaction :=
+		&model.Transaction{
+			Amount:      req.Amount,
+			Message:     req.Message,
+			TxHash:      req.TxHash,
+			AddressFrom: req.AddressFrom,
+			AddressToID: walletID,
+		}
+	return s.transactionRepo.Create(ctx, transaction)
+}
