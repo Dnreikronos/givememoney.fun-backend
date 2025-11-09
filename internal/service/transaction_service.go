@@ -41,3 +41,7 @@ func (s *TransactionService) GetAllTransactions(ctx context.Context) (*[]model.T
 func (s *TransactionService) GetByWalletID(ctx context.Context, walletID uuid.UUID) (*[]model.Transaction, error) {
 	return s.transactionRepo.FindByWalletID(ctx, walletID)
 }
+
+func (s *TransactionService) GetByStreamerID(ctx context.Context, streamerID uuid.UUID) (*[]model.Transaction, error) {
+	return s.transactionRepo.FindByStreamerID(ctx, streamerID)
+}
