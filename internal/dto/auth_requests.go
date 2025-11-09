@@ -14,7 +14,8 @@ type KickCallbackRequest struct {
 
 type WalletRequest struct {
 	WalletProvider utils.WalletProvider `json:"wallet_provider" validate:"required" binding:"required"`
-	Hash           string               `json:"hash" validate:"required,len=64" binding:"required,len=64"`
+	WalletAddress  string               `json:"wallet_address" validate:"required,len=64" binding:"required,len=64"`
+}
 }
 
 type RefreshTokenRequest struct {
