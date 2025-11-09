@@ -36,3 +36,19 @@ func (c *TransactionController) Create(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, transaction)
 }
+
+func (c *TransactionController) GetByID(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	transaction, err := c.transactionService.GetByID(ctx, id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, transaction)
+}
