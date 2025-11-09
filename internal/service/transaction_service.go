@@ -33,3 +33,7 @@ func (s *TransactionService) Create(ctx context.Context, walletID uuid.UUID, req
 func (s *TransactionService) GetByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error) {
 	return s.transactionRepo.FindByID(ctx, id)
 }
+
+func (s *TransactionService) GetAllTransactions(ctx context.Context) (*[]model.Transaction, error) {
+	return s.transactionRepo.FindAll(ctx)
+}
