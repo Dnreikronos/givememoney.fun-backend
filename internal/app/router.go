@@ -22,6 +22,7 @@ func SetupRouter(c *Container) *gin.Engine {
 			setupAuthRoutes(auth, c)
 			setupSessionRoutes(auth, c)
 			setupWalletRoutes(auth, c)
+			setupTransactionRoutes(auth, c)
 		}
 	}
 
@@ -62,4 +63,11 @@ func setupWalletRoutes(g *gin.RouterGroup, c *Container) {
 	g.GET("/wallet/:id", c.Controllers.Wallet.GetByID)
 	g.PUT("/wallet/:id", c.Controllers.Wallet.Update)
 	g.DELETE("/wallet/:id", c.Controllers.Wallet.Delete)
+}
+
+func setupTransactionRoutes(g *gin.RouterGroup, c *Container) {
+	g.GET("/transaction/wallet/:address_to_id", c.Controllers.Transaction.GetByWalletID)
+	g.GET("/transaction/streamer/:streamer_id", c.Controllers.Transaction.GetByStreamerID)
+	g.GET("/transaction/:id", c.Controllers.Transaction.GetByID)
+	g.GET("/transaction", c.Controllers.Transaction.GetAllTransactions)
 }
