@@ -13,6 +13,8 @@ func SetupRouter(c *Container) *gin.Engine {
 
 	api := router.Group("/api")
 	{
+		api.POST("/transaction", c.Controllers.Transaction.Create)
+
 		auth := api.Group("/auth")
 		{
 			setupTwitchRoutes(auth.Group("/twitch"), c)
