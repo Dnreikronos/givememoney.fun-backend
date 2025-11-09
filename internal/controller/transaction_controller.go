@@ -52,3 +52,14 @@ func (c *TransactionController) GetByID(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, transaction)
 }
+
+func (c *TransactionController) GetAllTransactions(ctx *gin.Context) {
+	transactions, err := c.transactionService.GetAllTransactions(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, transactions)
+}
+
