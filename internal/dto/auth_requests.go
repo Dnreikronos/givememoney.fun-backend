@@ -14,7 +14,14 @@ type KickCallbackRequest struct {
 
 type WalletRequest struct {
 	WalletProvider utils.WalletProvider `json:"wallet_provider" validate:"required" binding:"required"`
-	Hash           string               `json:"hash" validate:"required,len=64" binding:"required,len=64"`
+	WalletAddress  string               `json:"wallet_address" validate:"required,len=64" binding:"required,len=64"`
+}
+
+type TransactionRequest struct {
+	Amount      float64 `json:"amount" validate:"required"`
+	Message     string  `json:"message"`
+	TxHash      string  `json:"tx_hash" validate:"required"`
+	AddressFrom string  `json:"address_from" validate:"required"`
 }
 
 type RefreshTokenRequest struct {
