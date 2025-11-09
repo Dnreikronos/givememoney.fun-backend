@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
+	Message     string  `json:"message"`
 type Transaction struct {
 	ID          uuid.UUID `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
 	AddressFrom string    `json:"address_from" gorm:"type:string;not null"`
