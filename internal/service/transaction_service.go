@@ -37,3 +37,7 @@ func (s *TransactionService) GetByID(ctx context.Context, id uuid.UUID) (*model.
 func (s *TransactionService) GetAllTransactions(ctx context.Context) (*[]model.Transaction, error) {
 	return s.transactionRepo.FindAll(ctx)
 }
+
+func (s *TransactionService) GetByWalletID(ctx context.Context, walletID uuid.UUID) (*[]model.Transaction, error) {
+	return s.transactionRepo.FindByWalletID(ctx, walletID)
+}
