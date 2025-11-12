@@ -61,3 +61,6 @@ func (h *Hub) Run() {
 	}
 }
 
+func (h *Hub) BroadcastToStreamer(streamerID uuid.UUID, data interface{}) {
+	h.broadcast <- &Message{StreamerID: streamerID, Data: data}
+}
