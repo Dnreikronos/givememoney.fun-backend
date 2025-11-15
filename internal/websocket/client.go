@@ -14,7 +14,7 @@ type Client struct {
 	StreamerID uuid.UUID
 }
 
-func (c *Client) ReadBump() {
+func (c *Client) ReadPump() {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
