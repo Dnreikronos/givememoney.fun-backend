@@ -7,10 +7,10 @@ import (
 )
 
 type Hub struct {
-	clients    map[uuid.UUID]map[*Client]bool
-	broadcast  chan *Message
-	register   chan *Client
-	unregister chan *Client
+	Clients    map[uuid.UUID]map[*Client]bool
+	Broadcast  chan *Message
+	Register   chan *Client
+	Unregister chan *Client
 	mu         sync.RWMutex
 }
 
@@ -21,40 +21,40 @@ type Message struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[uuid.UUID]map[*Client]bool),
-		broadcast:  make(chan *Message),
-		register:   make(chan *Client),
-		unregister: make(chan *Client),
+		Clients:    make(map[uuid.UUID]map[*Client]bool),
+		Broadcast:  make(chan *Message),
+		Register:   make(chan *Client),
+		Unregister: make(chan *Client),
 	}
 }
 
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.register:
+		case client := <-h.Register:
 			h.mu.Lock()
-			if h.clients[client.StreamerID] == nil {
-				h.clients[client.StreamerID] = make(map[*Client]bool)
+			if h.Clients[client.StreamerID] == nil {
+				h.Clients[client.StreamerID] = make(map[*Client]bool)
 			}
-			h.clients[client.StreamerID][client] = true
+			h.Clients[client.StreamerID][client] = true
 			h.mu.Unlock()
-		case client := <-h.unregister:
+		case client := <-h.Unregister:
 			h.mu.Lock()
-			if clients, ok := h.clients[client.StreamerID]; ok {
+			if clients, ok := h.Clients[client.StreamerID]; ok {
 				delete(clients, client)
-				close(client.send)
+				close(client.Send)
 			}
 			h.mu.Unlock()
-		case message := <-h.broadcast:
+		case message := <-h.Broadcast:
 			h.mu.RLock()
-			clients := h.clients[message.StreamerID]
+			clients := h.Clients[message.StreamerID]
 			h.mu.RUnlock()
 			for client := range clients {
 				select {
-				case client.send <- message.Data:
+				case client.Send <- message.Data:
 				default:
-					close(client.send)
-					delete(h.clients[message.StreamerID], client)
+					close(client.Send)
+					delete(h.Clients[message.StreamerID], client)
 				}
 			}
 		}
@@ -62,5 +62,5 @@ func (h *Hub) Run() {
 }
 
 func (h *Hub) BroadcastToStreamer(streamerID uuid.UUID, data interface{}) {
-	h.broadcast <- &Message{StreamerID: streamerID, Data: data}
+	h.Broadcast <- &Message{StreamerID: streamerID, Data: data}
 }
