@@ -5,12 +5,14 @@ import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/controller"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/websocket"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
 
 type Container struct {
 	Controllers *Controllers
+	Hub         *websocket.Hub
 }
 
 type Controllers struct {
@@ -19,9 +21,14 @@ type Controllers struct {
 	Session     *controller.SessionController
 	Wallet      *controller.WalletController
 	Transaction *controller.TransactionController
+	Webscoket   *controller.WebsocketController
 }
 
 func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
+
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	streamerRepo := repository.NewStreamerRepository(db)
 	walletRepo := repository.NewWalletRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
@@ -30,7 +37,7 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 	jwtService := service.NewJWTService()
 	sessionService := service.NewSessionService(db, jwtService)
 	walletService := service.NewWalletService(walletRepo)
-	transactionService := service.NewTransactionService(transactionRepo)
+	transactionService := service.NewTransactionService(transactionRepo, walletRepo, hub)
 
 	helpers := controller.NewAuthHelpers(sessionService, streamerRepo)
 
@@ -40,7 +47,11 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 		Session:     controller.NewSessionController(sessionService, jwtService, streamerRepo, helpers, logger),
 		Wallet:      controller.NewWalletController(walletService),
 		Transaction: controller.NewTransactionController(transactionService),
+		Webscoket:   controller.NewWebsocketController(hub),
 	}
 
-	return &Container{Controllers: controllers}, nil
+	return &Container{
+		Controllers: controllers,
+		Hub:         hub,
+	}, nil
 }
