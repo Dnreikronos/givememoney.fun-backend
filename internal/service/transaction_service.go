@@ -5,16 +5,21 @@ import (
 
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/websocket"
 	"github.com/google/uuid"
 )
 
 type TransactionService struct {
 	transactionRepo *repository.TransactionRepository
+	walletRepo      *repository.WalletRepository
+	hub             *websocket.Hub
 }
 
-func NewTransactionService(transactionRepo *repository.TransactionRepository) *TransactionService {
+func NewTransactionService(transactionRepo *repository.TransactionRepository, walletRepo *repository.WalletRepository, hub *websocket.Hub) *TransactionService {
 	return &TransactionService{
 		transactionRepo: transactionRepo,
+		walletRepo:      walletRepo,
+		hub:             hub,
 	}
 }
 
@@ -27,7 +32,17 @@ func (s *TransactionService) Create(ctx context.Context, walletID uuid.UUID, req
 			AddressFrom: req.AddressFrom,
 			AddressToID: walletID,
 		}
-	return s.transactionRepo.Create(ctx, transaction)
+	result, err := s.transactionRepo.Create(ctx, transaction)
+	if err != nil {
+		return nil, err
+	}
+
+	wallet, err := s.walletRepo.FindByID(ctx, walletID)
+	if err == nil && wallet != nil {
+		s.hub.BroadcastToStreamer(wallet.StreamerID, result)
+	}
+
+	return result, nil
 }
 
 func (s *TransactionService) GetByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error) {
