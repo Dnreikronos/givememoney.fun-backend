@@ -21,7 +21,8 @@ type Controllers struct {
 	Session     *controller.SessionController
 	Wallet      *controller.WalletController
 	Transaction *controller.TransactionController
-	Webscoket   *controller.WebsocketController
+	Websocket   *controller.WebsocketController
+	Alert       *controller.AlertController
 }
 
 func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
@@ -47,7 +48,8 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 		Session:     controller.NewSessionController(sessionService, jwtService, streamerRepo, helpers, logger),
 		Wallet:      controller.NewWalletController(walletService),
 		Transaction: controller.NewTransactionController(transactionService),
-		Webscoket:   controller.NewWebsocketController(hub),
+		Websocket:   controller.NewWebsocketController(hub),
+		Alert:       controller.NewAlertController(),
 	}
 
 	return &Container{
