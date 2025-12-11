@@ -43,7 +43,7 @@ func (tr *TransactionRepository) FindAll(ctx context.Context) (*[]model.Transact
 
 func (tr *TransactionRepository) FindByWalletID(ctx context.Context, walletID uuid.UUID) (*[]model.Transaction, error) {
 	var transactions []model.Transaction
-	if err := tr.db.WithContext(ctx).Where("wallet_id = ?", walletID).Find(&transactions).Error; err != nil {
+	if err := tr.db.WithContext(ctx).Where("address_to_id = ?", walletID).Find(&transactions).Error; err != nil {
 		return nil, err
 	}
 
@@ -52,22 +52,13 @@ func (tr *TransactionRepository) FindByWalletID(ctx context.Context, walletID uu
 
 func (tr *TransactionRepository) FindByStreamerID(ctx context.Context, streamerID uuid.UUID) (*[]model.Transaction, error) {
 	var transactions []model.Transaction
-	if err := tr.db.WithContext(ctx).Where("streamer_id = ?", streamerID).Find(&transactions).Error; err != nil {
+	// Join with wallets table to filter by streamer_id
+	if err := tr.db.WithContext(ctx).
+		Joins("JOIN wallets ON transactions.address_to_id = wallets.id").
+		Where("wallets.streamer_id = ?", streamerID).
+		Find(&transactions).Error; err != nil {
 		return nil, err
 	}
 
 	return &transactions, nil
 }
-
-// I think that don't make sense to have a update and delete of transactions, because after that is sent by the user the transaction is already on the database and on the chain
-// func (tr *TransactionRepository) Update(ctx context.Context, transaction *model.Transaction) (*model.Transaction, error) {
-// 	if err := tr.db.WithContext(ctx).Save(transaction).Error; err != nil {
-// 		return nil, err
-// 	}
-
-// 	return transaction, nil
-// }
-
-// func (tr *TransactionRepository) Delete(ctx context.Context, id uuid.UUID) error {
-// 	return tr.db.WithContext(ctx).Delete(&model.Transaction{}, "id = ?", id).Error
-// }
