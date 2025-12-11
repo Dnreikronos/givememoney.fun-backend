@@ -14,6 +14,8 @@ func SetupRouter(c *Container) *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.POST("/transaction/wallet/:wallet_id", c.Controllers.Transaction.Create)
+		api.POST("/transaction", c.Controllers.Transaction.Create)
+		api.GET("/ws/alerts/:streamer_id", c.Controllers.Websocket.HandleConnection)
 
 		auth := api.Group("/auth")
 		{
