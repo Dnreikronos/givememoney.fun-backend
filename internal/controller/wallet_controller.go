@@ -42,32 +42,61 @@ func (c *WalletController) Create(ctx *gin.Context) {
 
 	// Normalize wallet address (remove 0x prefix if present, ensure 64 chars)
 	walletAddr := strings.TrimSpace(req.WalletAddress)
-	if strings.HasPrefix(strings.ToLower(walletAddr), "0x") {
-		walletAddr = walletAddr[2:]
-	}
 
-	if len(walletAddr) != 64 {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":             "wallet_address must be exactly 64 hexadecimal characters",
-			"received_length":   len(req.WalletAddress),
-			"normalized_length": len(walletAddr),
-			"hint":              "Ethereum addresses are 40 hex chars (42 with 0x). You may need a different format or padding.",
-		})
-		return
-	}
+	switch strings.ToLower(string(req.WalletProvider)) {
+	case "metamask":
+		if strings.HasPrefix(strings.ToLower(walletAddr), "0x") {
+			walletAddr = walletAddr[2:]
+		}
 
-	// Validate hex characters
-	for _, char := range walletAddr {
-		if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
+		if len(walletAddr) != 40 {
 			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error": "wallet_address must contain only hexadecimal characters (0-9, a-f, A-F)",
+				"error":             "MetaMask wallet address must be exactly 40 hexadecimal characters",
+				"received_length":   len(req.WalletAddress),
+				"normalized_length": len(walletAddr),
+				"hint":              "Ethereum addresses are 40 hex chars (42 with 0x prefix)",
 			})
 			return
 		}
-	}
 
-	// Store normalized address (lowercase, no 0x)
-	req.WalletAddress = strings.ToLower(walletAddr)
+		for _, char := range walletAddr {
+			if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"error": "MetaMask wallet address must contain only hexadecimal characters (0-9, a-f, A-F)",
+				})
+				return
+			}
+		}
+		req.WalletAddress = strings.ToLower(walletAddr)
+	case "phantom":
+		if len(walletAddr) < 32 || len(walletAddr) > 44 {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error":           "Phantom wallet address must be between 32 and 44 characters",
+				"received_length": len(walletAddr),
+				"hint":            "Solana addresses are Base58 encoded strings, typically 32-44 characters",
+			})
+			return
+		}
+
+		validBase58 := "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+		for _, char := range walletAddr {
+			if !strings.ContainsRune(validBase58, char) {
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"error": "Phantom wallet address must contain only valid Base58 characters (excludes 0, O, I, l)",
+				})
+				return
+			}
+		}
+
+		req.WalletAddress = walletAddr
+	default:
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":             "Invalid provider",
+			"supported":         []string{"metamask", "phantom"},
+			"received_provider": req.WalletProvider,
+		})
+		return
+	}
 
 	streamerID, exists := ctx.Get("streamer_id")
 	if !exists || streamerID == nil {
