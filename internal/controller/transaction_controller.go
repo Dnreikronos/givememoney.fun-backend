@@ -27,8 +27,25 @@ func (c *TransactionController) Create(ctx *gin.Context) {
 		return
 	}
 
-	AddressToID, _ := ctx.Get("address_to_id")
-	transaction, err := c.transactionService.Create(ctx, AddressToID.(uuid.UUID), &req)
+	// Get wallet ID from URL parameter or request body
+	walletIDStr := ctx.Param("wallet_id")
+	if walletIDStr == "" {
+		// Try to get from query parameter
+		walletIDStr = ctx.Query("wallet_id")
+	}
+	
+	if walletIDStr == "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "wallet_id is required (as URL parameter or query parameter)"})
+		return
+	}
+
+	walletID, err := uuid.Parse(walletIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid wallet_id format"})
+		return
+	}
+
+	transaction, err := c.transactionService.Create(ctx, walletID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
