@@ -21,7 +21,13 @@ func (r *WalletRepository) Create(ctx context.Context, wallet *model.Wallet) (*m
 		return nil, err
 	}
 
-	return wallet, nil
+	// Reload wallet with Streamer relationship preloaded
+	var loadedWallet model.Wallet
+	if err := r.db.WithContext(ctx).Preload("Streamer").First(&loadedWallet, wallet.ID).Error; err != nil {
+		return nil, err
+	}
+
+	return &loadedWallet, nil
 }
 
 func (r *WalletRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Wallet, error) {
