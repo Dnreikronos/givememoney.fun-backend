@@ -13,9 +13,11 @@ func SetupRouter(c *Container) *gin.Engine {
 
 	api := router.Group("/api")
 	{
+		api.POST("/transaction/wallet/:wallet_id", c.Controllers.Transaction.Create)
 		api.POST("/transaction", c.Controllers.Transaction.Create)
 		api.GET("/ws/alerts/:streamer_id", c.Controllers.Websocket.HandleConnection)
 		api.GET("/alerts/:streamer_id", c.Controllers.Alert.ServeAlertPage)
+		api.POST("/transaction/wallet/:wallet_id", c.Controllers.Transaction.Create)
 
 		auth := api.Group("/auth")
 		{
@@ -31,6 +33,9 @@ func SetupRouter(c *Container) *gin.Engine {
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// WebSocket route for OBS alerts
+	router.GET("/ws/streamer/:streamer_id", c.Controllers.Websocket.HandleConnection)
 
 	return router
 }
@@ -60,11 +65,12 @@ func setupSessionRoutes(g *gin.RouterGroup, c *Container) {
 }
 
 func setupWalletRoutes(g *gin.RouterGroup, c *Container) {
-	g.POST("/wallet", c.Controllers.Wallet.Create)
-	g.GET("/wallet/streamer/:streamer_id", c.Controllers.Wallet.GetByStreamer)
-	g.GET("/wallet/:id", c.Controllers.Wallet.GetByID)
-	g.PUT("/wallet/:id", c.Controllers.Wallet.Update)
-	g.DELETE("/wallet/:id", c.Controllers.Wallet.Delete)
+	authMiddleware := middleware.AuthMiddleware(c.JWTService)
+	g.POST("/wallet", authMiddleware, c.Controllers.Wallet.Create)
+	g.GET("/wallet/streamer/:streamer_id", authMiddleware, c.Controllers.Wallet.GetByStreamer)
+	g.GET("/wallet/:id", authMiddleware, c.Controllers.Wallet.GetByID)
+	g.PUT("/wallet/:id", authMiddleware, c.Controllers.Wallet.Update)
+	g.DELETE("/wallet/:id", authMiddleware, c.Controllers.Wallet.Delete)
 }
 
 func setupTransactionRoutes(g *gin.RouterGroup, c *Container) {

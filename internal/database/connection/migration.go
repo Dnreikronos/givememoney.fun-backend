@@ -16,6 +16,7 @@ func CreateTable(db *gorm.DB) {
 		&model.Streamer{},
 		&model.Session{},
 		&model.RefreshToken{},
+		&model.Transaction{},
 	)
 
 	if err != nil {
