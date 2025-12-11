@@ -35,11 +35,7 @@ func SetupRouter(c *Container) *gin.Engine {
 	})
 
 	// WebSocket route for OBS alerts
-<<<<<<< HEAD
-	router.GET("/ws/streamer/:streamer_id", c.Controllers.Webscoket.HandleConnection)
-=======
 	router.GET("/ws/streamer/:streamer_id", c.Controllers.Websocket.HandleConnection)
->>>>>>> 6af673a (fix: fix merge conflict)
 
 	return router
 }
