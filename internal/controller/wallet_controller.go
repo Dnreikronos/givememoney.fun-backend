@@ -147,6 +147,7 @@ func (c *WalletController) GetByID(ctx *gin.Context) {
 	wallet, err := c.walletService.GetByID(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid wallet"})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, wallet)
@@ -177,6 +178,7 @@ func (c *WalletController) Update(ctx *gin.Context) {
 	var req model.WalletUpdateInput
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, id)
