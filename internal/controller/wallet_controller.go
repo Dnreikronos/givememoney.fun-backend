@@ -191,7 +191,14 @@ func (c *WalletController) Update(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, id)
+	wallet, err := c.walletService.Update(ctx, id, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+
+	}
+
+	ctx.JSON(http.StatusOK, wallet)
 }
 
 func (c *WalletController) Delete(ctx *gin.Context) {
