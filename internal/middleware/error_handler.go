@@ -75,6 +75,7 @@ func handleGenericError(c *gin.Context, err error, logger *zap.Logger) {
 
 func AbortWithError(c *gin.Context, appErr *errors.AppError) {
 	c.Error(appErr)
+	c.JSON(appErr.StatusCode, appErr)
 	c.Abort()
 }
 
