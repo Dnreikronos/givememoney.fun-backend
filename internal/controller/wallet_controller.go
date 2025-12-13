@@ -153,6 +153,16 @@ func (c *WalletController) GetByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, wallet)
 }
 
+func (c *WalletController) GetByWalletAddress(ctx *gin.Context) {
+	walletAddress := ctx.Param("wallet_address")
+	wallet, err := c.walletService.GetByWalletAddress(ctx, walletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, wallet)
+}
+
 func (c *WalletController) GetByStreamer(ctx *gin.Context) {
 	streamerID, err := uuid.Parse(ctx.Param("streamer_id"))
 	if err != nil {
