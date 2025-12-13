@@ -17,7 +17,6 @@ func SetupRouter(c *Container) *gin.Engine {
 		api.POST("/transaction", c.Controllers.Transaction.Create)
 		api.GET("/ws/alerts/:streamer_id", c.Controllers.Websocket.HandleConnection)
 		api.GET("/alerts/:streamer_id", c.Controllers.Alert.ServeAlertPage)
-		api.POST("/transaction/wallet/:wallet_id", c.Controllers.Transaction.Create)
 
 		auth := api.Group("/auth")
 		{
@@ -69,6 +68,7 @@ func setupWalletRoutes(g *gin.RouterGroup, c *Container) {
 	g.POST("/wallet", authMiddleware, c.Controllers.Wallet.Create)
 	g.GET("/wallet/streamer/:streamer_id", authMiddleware, c.Controllers.Wallet.GetByStreamer)
 	g.GET("/wallet/:id", authMiddleware, c.Controllers.Wallet.GetByID)
+	g.GET("/wallet/address/:wallet_address", authMiddleware, c.Controllers.Wallet.GetByWalletAddress)
 	g.PUT("/wallet/:id", authMiddleware, c.Controllers.Wallet.Update)
 	g.DELETE("/wallet/:id", authMiddleware, c.Controllers.Wallet.Delete)
 }

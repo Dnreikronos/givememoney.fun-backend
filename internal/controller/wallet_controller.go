@@ -147,8 +147,19 @@ func (c *WalletController) GetByID(ctx *gin.Context) {
 	wallet, err := c.walletService.GetByID(ctx, id)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid wallet"})
+		return
 	}
 
+	ctx.JSON(http.StatusOK, wallet)
+}
+
+func (c *WalletController) GetByWalletAddress(ctx *gin.Context) {
+	walletAddress := ctx.Param("wallet_address")
+	wallet, err := c.walletService.GetByWalletAddress(ctx, walletAddress)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
 	ctx.JSON(http.StatusOK, wallet)
 }
 
@@ -177,9 +188,17 @@ func (c *WalletController) Update(ctx *gin.Context) {
 	var req model.WalletUpdateInput
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	ctx.JSON(http.StatusOK, id)
+	wallet, err := c.walletService.Update(ctx, id, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+
+	}
+
+	ctx.JSON(http.StatusOK, wallet)
 }
 
 func (c *WalletController) Delete(ctx *gin.Context) {
@@ -194,5 +213,5 @@ func (c *WalletController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Status(http.StatusNoContent)
+	ctx.Status(http.StatusOK)
 }
