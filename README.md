@@ -150,6 +150,36 @@ make test
 go test ./...
 ```
 
+## 🤝 Our Team
+
+Meet the builders of the project:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/yuribodo" title="Yuri Bodó">
+        <img src="https://avatars3.githubusercontent.com/u/83407152" width="100px;" alt="Yuri Bodó"/><br>
+        <sub><b>Yuri Bodó</b></sub>
+      </a>
+      <br />
+      <a href="https://linkedin.com/in/mario-lara-1a801b272">
+        <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn Badge"/>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Dnreikronos" title="João Soares">
+        <img src="https://avatars3.githubusercontent.com/u/37777652" width="100px;" alt="João Soares"/><br>
+        <sub><b>João Soares</b></sub>
+      </a>
+      <br />
+      <a href="https://linkedin.com/in/joao-roberto-lawall-soares-a58468242">
+        <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white" alt="LinkedIn Badge"/>
+      </a>
+    </td>
+  </tr>
+</table>
+
+
 ## License
 
 See repository license file.
