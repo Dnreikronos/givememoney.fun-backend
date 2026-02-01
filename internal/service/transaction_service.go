@@ -9,12 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
+// TransactionService handles transaction business logic and real-time broadcast.
 type TransactionService struct {
 	transactionRepo *repository.TransactionRepository
 	walletRepo      *repository.WalletRepository
 	hub             *websocket.Hub
 }
 
+// NewTransactionService creates a new TransactionService with the given dependencies.
 func NewTransactionService(transactionRepo *repository.TransactionRepository, walletRepo *repository.WalletRepository, hub *websocket.Hub) *TransactionService {
 	return &TransactionService{
 		transactionRepo: transactionRepo,

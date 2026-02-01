@@ -3,6 +3,8 @@ package controller
 import (
 	"net/http"
 
+	apperrors "github.com/Dnreikronos/givememoney.fun-backend/internal/errors"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/websocket"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -13,20 +15,23 @@ var upgrader = ws.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
+// WebsocketController handles WebSocket connections for real-time updates.
 type WebsocketController struct {
 	hub *websocket.Hub
 }
 
+// NewWebsocketController creates a new WebsocketController with the given hub.
 func NewWebsocketController(hub *websocket.Hub) *WebsocketController {
 	return &WebsocketController{
 		hub: hub,
 	}
 }
 
+// HandleConnection upgrades the HTTP connection to WebSocket and registers the client.
 func (wsc *WebsocketController) HandleConnection(ctx *gin.Context) {
 	streamerID, err := uuid.Parse(ctx.Param("streamer_id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid streamer_id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid streamer_id", err))
 		return
 	}
 
