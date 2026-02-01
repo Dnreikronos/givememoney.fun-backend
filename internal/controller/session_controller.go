@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// SessionController handles HTTP requests for session and authentication state.
 type SessionController struct {
 	sessionService *service.SessionService
 	jwtService     *service.JWTService
