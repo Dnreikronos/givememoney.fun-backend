@@ -12,6 +12,7 @@ func NewAlertController() *AlertController {
 	return &AlertController{}
 }
 
+// ServeAlertPage returns the HTML page for the donation alert overlay (WebSocket client).
 func (ac *AlertController) ServeAlertPage(ctx *gin.Context) {
 	streamerID := ctx.Param("streamer_id")
 
