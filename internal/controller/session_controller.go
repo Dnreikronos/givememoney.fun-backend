@@ -20,6 +20,7 @@ type SessionController struct {
 	helpers        *AuthHelpers
 }
 
+// NewSessionController creates a new SessionController with the given dependencies.
 func NewSessionController(
 	sessionService *service.SessionService,
 	jwtService *service.JWTService,
@@ -36,6 +37,7 @@ func NewSessionController(
 	}
 }
 
+// Create creates a session from OAuth callback tokens and user info.
 func (c *SessionController) Create(ctx *gin.Context) {
 	var request struct {
 		AccessToken  string `json:"access_token" binding:"required"`
@@ -94,6 +96,7 @@ func (c *SessionController) Create(ctx *gin.Context) {
 	})
 }
 
+// Get returns the current session and user if authenticated.
 func (c *SessionController) Get(ctx *gin.Context) {
 	result, err := c.sessionService.ValidateSession(ctx)
 	if err != nil || !result.IsValid {
@@ -117,6 +120,7 @@ func (c *SessionController) Get(ctx *gin.Context) {
 	})
 }
 
+// Delete invalidates the current session.
 func (c *SessionController) Delete(ctx *gin.Context) {
 	err := c.sessionService.InvalidateSession(ctx)
 	if err != nil {
@@ -129,6 +133,7 @@ func (c *SessionController) Delete(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"success": true})
 }
 
+// Refresh refreshes the access token using the refresh token.
 func (c *SessionController) Refresh(ctx *gin.Context) {
 	tokenPair, err := c.sessionService.RefreshSession(ctx)
 	if err != nil {
@@ -144,6 +149,7 @@ func (c *SessionController) Refresh(ctx *gin.Context) {
 	})
 }
 
+// GetActive returns the list of active sessions for the current user.
 func (c *SessionController) GetActive(ctx *gin.Context) {
 	result, err := c.sessionService.ValidateSession(ctx)
 	if err != nil || !result.IsValid {
@@ -161,6 +167,7 @@ func (c *SessionController) GetActive(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
+// Logout invalidates the current session (alias for Delete).
 func (c *SessionController) Logout(ctx *gin.Context) {
 	err := c.sessionService.InvalidateSession(ctx)
 	if err != nil {
