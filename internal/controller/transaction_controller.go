@@ -1,12 +1,17 @@
 package controller
 
 import (
+	"context"
+	"errors"
 	"net/http"
 
+	apperrors "github.com/Dnreikronos/givememoney.fun-backend/internal/errors"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // TransactionService defines the transaction operations used by TransactionController.
@@ -22,102 +27,109 @@ var _ TransactionService = (*service.TransactionService)(nil)
 
 // TransactionController handles HTTP requests for transaction resources.
 type TransactionController struct {
-	transactionService *service.TransactionService
+	transactionService TransactionService
 }
 
-func NewTransactionController(transactionService *service.TransactionService) *TransactionController {
+// NewTransactionController creates a new TransactionController with the given transaction service.
+func NewTransactionController(transactionService TransactionService) *TransactionController {
 	return &TransactionController{
 		transactionService: transactionService,
 	}
 }
 
+// Create creates a new transaction for a wallet.
 func (c *TransactionController) Create(ctx *gin.Context) {
 	var req model.TransactionRequest
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("Invalid request body", err))
 		return
 	}
 
-	// Get wallet ID from URL parameter or request body
 	walletIDStr := ctx.Param("wallet_id")
 	if walletIDStr == "" {
-		// Try to get from query parameter
 		walletIDStr = ctx.Query("wallet_id")
 	}
-	
 	if walletIDStr == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "wallet_id is required (as URL parameter or query parameter)"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("wallet_id is required (as URL parameter or query parameter)", nil))
 		return
 	}
 
 	walletID, err := uuid.Parse(walletIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid wallet_id format"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid wallet_id format", err))
 		return
 	}
 
 	transaction, err := c.transactionService.Create(ctx, walletID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to create transaction", err))
 		return
 	}
 
 	ctx.JSON(http.StatusCreated, transaction)
 }
 
+// GetByID returns a transaction by ID.
 func (c *TransactionController) GetByID(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid id", err))
 		return
 	}
 
 	transaction, err := c.transactionService.GetByID(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			middleware.AbortWithError(ctx, apperrors.NewNotFoundError("transaction"))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get transaction", err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, transaction)
 }
 
+// GetAllTransactions returns all transactions.
 func (c *TransactionController) GetAllTransactions(ctx *gin.Context) {
 	transactions, err := c.transactionService.GetAllTransactions(ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get transactions", err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, transactions)
 }
 
+// GetByWalletID returns transactions for a wallet.
 func (c *TransactionController) GetByWalletID(ctx *gin.Context) {
 	walletID, err := uuid.Parse(ctx.Param("address_to_id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid wallet ID"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid wallet ID", err))
 		return
 	}
 
 	transactions, err := c.transactionService.GetByWalletID(ctx, walletID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get transactions", err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, transactions)
 }
 
+// GetByStreamerID returns transactions for a streamer.
 func (c *TransactionController) GetByStreamerID(ctx *gin.Context) {
 	streamerID, err := uuid.Parse(ctx.Param("streamer_id"))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid streamer_id", err))
 		return
 	}
 
 	transactions, err := c.transactionService.GetByStreamerID(ctx, streamerID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get transactions", err))
 		return
 	}
 
