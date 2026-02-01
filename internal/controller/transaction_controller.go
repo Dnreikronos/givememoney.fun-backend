@@ -9,6 +9,18 @@ import (
 	"github.com/google/uuid"
 )
 
+// TransactionService defines the transaction operations used by TransactionController.
+type TransactionService interface {
+	Create(ctx context.Context, walletID uuid.UUID, req *model.TransactionRequest) (*model.Transaction, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Transaction, error)
+	GetAllTransactions(ctx context.Context) (*[]model.Transaction, error)
+	GetByWalletID(ctx context.Context, walletID uuid.UUID) (*[]model.Transaction, error)
+	GetByStreamerID(ctx context.Context, streamerID uuid.UUID) (*[]model.Transaction, error)
+}
+
+var _ TransactionService = (*service.TransactionService)(nil)
+
+// TransactionController handles HTTP requests for transaction resources.
 type TransactionController struct {
 	transactionService *service.TransactionService
 }
