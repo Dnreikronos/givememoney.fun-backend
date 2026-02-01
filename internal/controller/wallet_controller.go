@@ -12,6 +12,21 @@ import (
 	"github.com/google/uuid"
 )
 
+// WalletService defines the wallet operations used by WalletController.
+// Accepting an interface enables testing with mocks (see interfaces.md).
+type WalletService interface {
+	Create(ctx context.Context, streamerID uuid.UUID, req *model.WalletRequest) (*model.Wallet, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*model.Wallet, error)
+	GetByWalletAddress(ctx context.Context, walletAddress string) (*model.Wallet, error)
+	GetByStreamerID(ctx context.Context, streamerID uuid.UUID) ([]model.Wallet, error)
+	Update(ctx context.Context, id uuid.UUID, req *model.WalletUpdateInput) (*model.Wallet, error)
+	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+// Ensure *service.WalletService satisfies WalletService at compile time.
+var _ WalletService = (*service.WalletService)(nil)
+
+// WalletController handles HTTP requests for wallet resources.
 type WalletController struct {
 	walletService *service.WalletService
 }
