@@ -13,11 +13,13 @@ import (
 	"github.com/google/uuid"
 )
 
+// AuthHelpers provides shared auth/session helpers for controllers.
 type AuthHelpers struct {
 	sessionService *service.SessionService
 	streamerRepo   interfaces.StreamerRepositoryInterface
 }
 
+// NewAuthHelpers creates a new AuthHelpers with the given dependencies.
 func NewAuthHelpers(
 	sessionService *service.SessionService,
 	streamerRepo interfaces.StreamerRepositoryInterface,

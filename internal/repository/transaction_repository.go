@@ -8,10 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// TransactionRepository handles transaction persistence.
 type TransactionRepository struct {
 	db *gorm.DB
 }
 
+// NewTransactionRepository creates a new TransactionRepository with the given DB.
 func NewTransactionRepository(db *gorm.DB) *TransactionRepository {
 	return &TransactionRepository{db: db}
 }

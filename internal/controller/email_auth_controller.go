@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// EmailAuthController handles email-based registration and login.
 type EmailAuthController struct {
 	authService  *service.AuthService
 	jwtService   *service.JWTService
@@ -36,6 +37,7 @@ func NewEmailAuthController(
 	}
 }
 
+// Register registers a new streamer with email and password.
 func (c *EmailAuthController) Register(ctx *gin.Context) {
 	var req dto.RegisterRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -102,6 +104,7 @@ func (c *EmailAuthController) Register(ctx *gin.Context) {
 	})
 }
 
+// Login authenticates a streamer with email and password.
 func (c *EmailAuthController) Login(ctx *gin.Context) {
 	var req dto.EmailLoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

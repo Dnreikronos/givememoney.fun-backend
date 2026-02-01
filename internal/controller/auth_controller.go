@@ -43,6 +43,7 @@ func NewAuthController(
 	}
 }
 
+// TwitchLogin redirects to Twitch OAuth.
 func (c *AuthController) TwitchLogin(ctx *gin.Context) {
 	authURL, err := c.authService.GetAuthURL(utils.ProviderTwitch)
 	if err != nil {
@@ -59,10 +60,11 @@ func (c *AuthController) TwitchLogin(ctx *gin.Context) {
 	ctx.Redirect(http.StatusFound, authURL)
 }
 
+// KickLogin redirects to Kick OAuth.
 func (c *AuthController) KickLogin(ctx *gin.Context) {
 	authURL, err := c.authService.GetAuthURL(utils.ProviderKick)
 	if err != nil {
-		appErr := errors.NewProviderAPIError("Failed  to get Kick auth URL", err)
+		appErr := errors.NewProviderAPIError("Failed to get Kick auth URL", err)
 		middleware.AbortWithError(ctx, appErr)
 		return
 	}
@@ -74,6 +76,7 @@ func (c *AuthController) KickLogin(ctx *gin.Context) {
 	ctx.Redirect(http.StatusFound, authURL)
 }
 
+// TwitchCallback handles the Twitch OAuth callback and creates a session.
 func (c *AuthController) TwitchCallback(ctx *gin.Context) {
 	var req dto.TwitchCallbackRequest
 
@@ -96,13 +99,13 @@ func (c *AuthController) TwitchCallback(ctx *gin.Context) {
 
 	tokenPair, err := c.helpers.CreateSessionForStreamer(ctx, streamer)
 	if err != nil {
-		c.logger.Error("Session creation failed", zap.Error(err), zap.String("streaner_id", streamer.ID.String()))
+		c.logger.Error("Session creation failed", zap.Error(err), zap.String("streamer_id", streamer.ID.String()))
 		ctx.Redirect(http.StatusFound, fmt.Sprintf("%s/login?error=session_creation_failed", frontendURL))
 		return
 	}
 	c.jwtService.SetTokenCookies(ctx, tokenPair)
 
-	c.logger.Info("Session created sucessfully",
+	c.logger.Info("Session created successfully",
 		zap.String("streamer_id", streamer.ID.String()),
 		zap.String("provider", string(streamer.Provider)),
 	)
@@ -111,6 +114,7 @@ func (c *AuthController) TwitchCallback(ctx *gin.Context) {
 	ctx.Redirect(http.StatusFound, redirectURL)
 }
 
+// KickCallback handles the Kick OAuth callback and creates a session.
 func (c *AuthController) KickCallback(ctx *gin.Context) {
 	var req dto.KickCallbackRequest
 	if !middleware.ValidateQuery(ctx, &req) {
@@ -180,14 +184,17 @@ func (c *AuthController) KickCallback(ctx *gin.Context) {
 	ctx.Redirect(http.StatusFound, redirectURL)
 }
 
+// TwitchUser returns the current Twitch user profile.
 func (c *AuthController) TwitchUser(ctx *gin.Context) {
 	c.handleUserProfile(ctx, utils.ProviderTwitch)
 }
 
+// KickUser returns the current Kick user profile.
 func (c *AuthController) KickUser(ctx *gin.Context) {
 	c.handleUserProfile(ctx, utils.ProviderKick)
 }
 
+// handleUserProfile returns the current user profile for the given provider.
 func (c *AuthController) handleUserProfile(ctx *gin.Context, expectedProvider utils.StreamerProvider) {
 	token, err := extractBearerToken(ctx.GetHeader("Authorization"))
 	if err != nil {
@@ -225,6 +232,7 @@ func (c *AuthController) handleUserProfile(ctx *gin.Context, expectedProvider ut
 	})
 }
 
+// extractBearerToken parses the Bearer token from the Authorization header.
 func extractBearerToken(header string) (string, error) {
 	if header == "" {
 		return "", fmt.Errorf("authorization header not provided")

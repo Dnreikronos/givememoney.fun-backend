@@ -8,10 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
+// WalletRepository handles wallet persistence.
 type WalletRepository struct {
 	db *gorm.DB
 }
 
+// NewWalletRepository creates a new WalletRepository with the given DB.
 func NewWalletRepository(db *gorm.DB) *WalletRepository {
 	return &WalletRepository{db: db}
 }
