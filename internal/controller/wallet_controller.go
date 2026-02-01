@@ -1,15 +1,21 @@
 package controller
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
+	apperrors "github.com/Dnreikronos/givememoney.fun-backend/internal/errors"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
+	pv "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 // WalletService defines the wallet operations used by WalletController.
@@ -28,120 +34,67 @@ var _ WalletService = (*service.WalletService)(nil)
 
 // WalletController handles HTTP requests for wallet resources.
 type WalletController struct {
-	walletService *service.WalletService
+	walletService WalletService
 }
 
-func NewWalletController(walletService *service.WalletService) *WalletController {
+// NewWalletController creates a new WalletController with the given wallet service.
+func NewWalletController(walletService WalletService) *WalletController {
 	return &WalletController{
 		walletService: walletService,
 	}
 }
 
+// Create creates a new wallet for the authenticated streamer.
 func (c *WalletController) Create(ctx *gin.Context) {
 	var req model.WalletRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
-			errors := make(map[string]string)
+		if validationErrors, ok := err.(pv.ValidationErrors); ok {
+			fieldErrs := make(map[string]string)
 			for _, e := range validationErrors {
-				errors[strings.ToLower(e.Field())] = getValidationError(e)
+				fieldErrs[strings.ToLower(e.Field())] = getValidationError(e)
 			}
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error":  "Validation failed",
-				"fields": errors,
-			})
+			appErr := apperrors.NewValidationError("Validation failed", err).WithContext("fields", fieldErrs)
+			middleware.AbortWithError(ctx, appErr)
 			return
 		}
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("Invalid request body", err))
 		return
 	}
 
-	// Normalize wallet address (remove 0x prefix if present, ensure 64 chars)
-	walletAddr := strings.TrimSpace(req.WalletAddress)
-
-	switch strings.ToLower(string(req.WalletProvider)) {
-	case "metamask":
-		if strings.HasPrefix(strings.ToLower(walletAddr), "0x") {
-			walletAddr = walletAddr[2:]
-		}
-
-		if len(walletAddr) != 40 {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error":             "MetaMask wallet address must be exactly 40 hexadecimal characters",
-				"received_length":   len(req.WalletAddress),
-				"normalized_length": len(walletAddr),
-				"hint":              "Ethereum addresses are 40 hex chars (42 with 0x prefix)",
-			})
-			return
-		}
-
-		for _, char := range walletAddr {
-			if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"error": "MetaMask wallet address must contain only hexadecimal characters (0-9, a-f, A-F)",
-				})
-				return
-			}
-		}
-		req.WalletAddress = strings.ToLower(walletAddr)
-	case "phantom":
-		if len(walletAddr) < 32 || len(walletAddr) > 44 {
-			ctx.JSON(http.StatusBadRequest, gin.H{
-				"error":           "Phantom wallet address must be between 32 and 44 characters",
-				"received_length": len(walletAddr),
-				"hint":            "Solana addresses are Base58 encoded strings, typically 32-44 characters",
-			})
-			return
-		}
-
-		validBase58 := "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-		for _, char := range walletAddr {
-			if !strings.ContainsRune(validBase58, char) {
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"error": "Phantom wallet address must contain only valid Base58 characters (excludes 0, O, I, l)",
-				})
-				return
-			}
-		}
-
-		req.WalletAddress = walletAddr
-	default:
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error":             "Invalid provider",
-			"supported":         []string{"metamask", "phantom"},
-			"received_provider": req.WalletProvider,
-		})
+	normalizedAddr, valErr := validator.NormalizeAndValidateWalletAddress(req.WalletProvider, req.WalletAddress)
+	if valErr != nil {
+		middleware.AbortWithError(ctx, valErr)
 		return
 	}
+	req.WalletAddress = normalizedAddr
 
 	streamerID, exists := ctx.Get("streamer_id")
 	if !exists || streamerID == nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{
-			"error": "streamer_id not found in context - authentication required",
-		})
+		middleware.AbortWithError(ctx, apperrors.NewUnauthorizedError("streamer_id not found in context - authentication required"))
 		return
 	}
 
 	streamerUUID, ok := streamerID.(uuid.UUID)
 	if !ok {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": "invalid streamer_id type",
-			"type":  fmt.Sprintf("%T", streamerID),
-		})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("invalid streamer_id type", nil).
+			WithContext("type", fmt.Sprintf("%T", streamerID)))
 		return
 	}
 
 	wallet, err := c.walletService.Create(ctx, streamerUUID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error":   err.Error(),
-			"message": "Failed to create wallet",
-		})
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			middleware.AbortWithError(ctx, apperrors.NewAppError(apperrors.ErrorCodeConflict, "Wallet address already registered", err))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to create wallet", err))
 		return
 	}
 	ctx.JSON(http.StatusCreated, wallet)
 }
 
-func getValidationError(e validator.FieldError) string {
+// getValidationError maps go-playground validator tags to user-facing messages.
+func getValidationError(e pv.FieldError) string {
 	switch e.Tag() {
 	case "required":
 		return "This field is required"
@@ -152,79 +105,96 @@ func getValidationError(e validator.FieldError) string {
 	}
 }
 
+// GetByID returns a wallet by ID.
 func (c *WalletController) GetByID(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid id", err))
 		return
 	}
 
 	wallet, err := c.walletService.GetByID(ctx, id)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "invalid wallet"})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			middleware.AbortWithError(ctx, apperrors.NewNotFoundError("wallet"))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get wallet", err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, wallet)
 }
 
+// GetByWalletAddress returns a wallet by its address.
 func (c *WalletController) GetByWalletAddress(ctx *gin.Context) {
 	walletAddress := ctx.Param("wallet_address")
 	wallet, err := c.walletService.GetByWalletAddress(ctx, walletAddress)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			middleware.AbortWithError(ctx, apperrors.NewNotFoundError("wallet"))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get wallet", err))
 		return
 	}
 	ctx.JSON(http.StatusOK, wallet)
 }
 
+// GetByStreamer returns all wallets for a streamer.
 func (c *WalletController) GetByStreamer(ctx *gin.Context) {
 	streamerID, err := uuid.Parse(ctx.Param("streamer_id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid streamer_id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid streamer_id", err))
 		return
 	}
 
 	wallets, err := c.walletService.GetByStreamerID(ctx, streamerID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get wallets", err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, wallets)
 }
 
+// Update updates an existing wallet by ID.
 func (c *WalletController) Update(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid id", err))
+		return
 	}
 
 	var req model.WalletUpdateInput
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("Invalid request body", err))
 		return
 	}
 
 	wallet, err := c.walletService.Update(ctx, id, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			middleware.AbortWithError(ctx, apperrors.NewNotFoundError("wallet"))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to update wallet", err))
 		return
-
 	}
 
 	ctx.JSON(http.StatusOK, wallet)
 }
 
+// Delete deletes a wallet by ID.
 func (c *WalletController) Delete(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid id", err))
 		return
 	}
 
 	if err := c.walletService.Delete(ctx, id); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to delete wallet", err))
 		return
 	}
 
