@@ -160,7 +160,7 @@ func (c *SessionController) GetActive(ctx *gin.Context) {
 
 	sessions, err := c.sessionService.GetActiveSessions(result.Claims.UserID, &result.Session.ID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get sessions"})
+		middleware.AbortWithError(ctx, errors.NewInternalError("Failed to get sessions", err))
 		return
 	}
 
