@@ -9,10 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// WalletService handles wallet business logic.
 type WalletService struct {
 	walletRepo *repository.WalletRepository
 }
 
+// NewWalletService creates a new WalletService with the given repository.
 func NewWalletService(walletRepo *repository.WalletRepository) *WalletService {
 	return &WalletService{
 		walletRepo: walletRepo,
