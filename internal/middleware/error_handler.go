@@ -73,9 +73,10 @@ func handleGenericError(c *gin.Context, err error, logger *zap.Logger) {
 	})
 }
 
+// AbortWithError aborts the request and responds with a consistent ErrorResponse (no internal Err leaked).
 func AbortWithError(c *gin.Context, appErr *errors.AppError) {
 	c.Error(appErr)
-	c.JSON(appErr.StatusCode, appErr)
+	c.JSON(appErr.StatusCode, appErr.ToErrorResponse())
 	c.Abort()
 }
 
