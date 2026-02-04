@@ -9,6 +9,7 @@ import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/service"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -44,6 +45,20 @@ func (c *TransactionController) Create(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		middleware.AbortWithError(ctx, apperrors.NewValidationError("Invalid request body", err))
 		return
+	}
+
+	if req.Currency != "" {
+		valid := false
+		for _, c := range utils.SupportedCurrencies {
+			if req.Currency == c {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			middleware.AbortWithError(ctx, apperrors.NewValidationError("currency must be one of: ETH, USDT, USDC", nil))
+			return
+		}
 	}
 
 	walletIDStr := ctx.Param("wallet_id")
