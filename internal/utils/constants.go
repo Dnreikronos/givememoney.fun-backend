@@ -2,6 +2,7 @@ package utils
 
 type StreamerProvider string
 type WalletProvider string
+type Currency string
 
 const (
 	ProviderTwitch         StreamerProvider = "twitch"
@@ -10,7 +11,14 @@ const (
 	ProviderEmail          StreamerProvider = "email"
 	MetamaskWalletProvider WalletProvider   = "metamask"
 	PhantomWalletProvider  WalletProvider   = "phantom"
+
+	CurrencyETH  Currency = "ETH"
+	CurrencyUSDT Currency = "USDT"
+	CurrencyUSDC Currency = "USDC"
 )
+
+// SupportedCurrencies lists currencies accepted for donations (native + stablecoins).
+var SupportedCurrencies = []Currency{CurrencyETH, CurrencyUSDT, CurrencyUSDC}
 
 type ProviderUser struct {
 	ID    string

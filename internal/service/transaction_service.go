@@ -5,6 +5,7 @@ import (
 
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/model"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/repository"
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/websocket"
 	"github.com/google/uuid"
 )
@@ -26,14 +27,18 @@ func NewTransactionService(transactionRepo *repository.TransactionRepository, wa
 }
 
 func (s *TransactionService) Create(ctx context.Context, walletID uuid.UUID, req *model.TransactionRequest) (*model.Transaction, error) {
-	transaction :=
-		&model.Transaction{
-			Amount:      req.Amount,
-			Message:     req.Message,
-			TxHash:      req.TxHash,
-			AddressFrom: req.AddressFrom,
-			AddressToID: walletID,
-		}
+	currency := req.Currency
+	if currency == "" {
+		currency = utils.CurrencyETH
+	}
+	transaction := &model.Transaction{
+		Amount:      req.Amount,
+		Message:     req.Message,
+		TxHash:      req.TxHash,
+		AddressFrom: req.AddressFrom,
+		AddressToID: walletID,
+		Currency:    currency,
+	}
 	result, err := s.transactionRepo.Create(ctx, transaction)
 	if err != nil {
 		return nil, err
