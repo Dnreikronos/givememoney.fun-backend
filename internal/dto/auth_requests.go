@@ -1,6 +1,8 @@
 package dto
 
-import "github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
+import (
+	"github.com/Dnreikronos/givememoney.fun-backend/internal/utils"
+)
 
 type TwitchCallbackRequest struct {
 	Code  string `form:"code" validate:"required" binding:"required"`
@@ -18,10 +20,11 @@ type WalletRequest struct {
 }
 
 type TransactionRequest struct {
-	Amount      float64 `json:"amount" validate:"required"`
-	Message     string  `json:"message"`
-	TxHash      string  `json:"tx_hash" validate:"required"`
-	AddressFrom string  `json:"address_from" validate:"required"`
+	Amount      float64        `json:"amount" validate:"required"`
+	Message     string         `json:"message"`
+	TxHash      string         `json:"tx_hash" validate:"required"`
+	AddressFrom string         `json:"address_from" validate:"required"`
+	Currency    utils.Currency `json:"currency" validate:"omitempty,oneof=ETH USDT USDC"`
 }
 
 type RefreshTokenRequest struct {

@@ -34,6 +34,7 @@ type Wallet struct {
 type Transaction struct {
 	ID          uuid.UUID `json:"id"`
 	Amount      string    `json:"amount"`
+	Currency    string    `json:"currency,omitempty"`
 	TxHash      string    `json:"tx_hash"`
 	AddressFrom string    `json:"address_from"`
 	Message     string    `json:"message"`
