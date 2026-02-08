@@ -14,6 +14,7 @@ type Container struct {
 	Controllers *Controllers
 	Hub         *websocket.Hub
 	JWTService  *service.JWTService
+	Logger      *zap.Logger
 }
 
 type Controllers struct {
@@ -57,5 +58,6 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 		Controllers: controllers,
 		Hub:         hub,
 		JWTService:  jwtService,
+		Logger:      logger,
 	}, nil
 }

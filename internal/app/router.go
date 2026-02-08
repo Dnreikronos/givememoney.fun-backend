@@ -7,7 +7,11 @@ import (
 )
 
 func SetupRouter(c *Container) *gin.Engine {
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(middleware.RequestIDMiddleware())
+	router.Use(middleware.RequestLoggerMiddleware(c.Logger))
+	router.Use(middleware.ErrorHandlerMiddleware(c.Logger))
 	router.Use(middleware.CORSMiddleware())
 	router.Use(middleware.SecurityMiddleware())
 
