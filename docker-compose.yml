@@ -71,7 +71,7 @@ services:
       - LS_JAVA_OPTS=-Xms256m -Xmx256m
     volumes:
       - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./elk/logstash/pipeline/givememoney.conf:/usr/share/logstash/pipeline/givememoney.conf:ro
+      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
     ports:
       - "5044:5044"
     depends_on:
@@ -97,6 +97,7 @@ services:
     image: docker.elastic.co/beats/filebeat:8.17.0
     container_name: filebeat
     user: root
+    command: filebeat -e --strict.perms=false
     volumes:
       - ./elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
