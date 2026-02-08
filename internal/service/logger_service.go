@@ -27,6 +27,16 @@ func NewLoggerService() (*LoggerService, error) {
 		return nil, err
 	}
 
+	serviceName := os.Getenv("SERVICE_NAME")
+	if serviceName == "" {
+		serviceName = "givememoney"
+	}
+
+	logger = logger.With(
+		zap.String("service", serviceName),
+		zap.String("environment", env),
+	)
+
 	return &LoggerService{logger: logger}, nil
 }
 
