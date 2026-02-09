@@ -185,6 +185,32 @@ func (c *WalletController) Update(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, wallet)
 }
 
+// GetByIDPublic returns public wallet information (no auth required).
+func (c *WalletController) GetByIDPublic(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		middleware.AbortWithError(ctx, apperrors.NewValidationError("invalid id", err))
+		return
+	}
+
+	wallet, err := c.walletService.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			middleware.AbortWithError(ctx, apperrors.NewNotFoundError("wallet"))
+			return
+		}
+		middleware.AbortWithError(ctx, apperrors.NewInternalError("Failed to get wallet", err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"id":              wallet.ID,
+		"wallet_provider": wallet.WalletProvider,
+		"wallet_address":  wallet.WalletAddress,
+		"streamer_id":     wallet.StreamerID,
+	})
+}
+
 // Delete deletes a wallet by ID.
 func (c *WalletController) Delete(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))

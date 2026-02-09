@@ -15,6 +15,7 @@ func SetupRouter(c *Container) *gin.Engine {
 	{
 		api.POST("/transaction/wallet/:wallet_id", c.Controllers.Transaction.Create)
 		api.POST("/transaction", c.Controllers.Transaction.Create)
+		api.GET("/wallet/:id/public", c.Controllers.Wallet.GetByIDPublic)
 		api.GET("/ws/alerts/:streamer_id", c.Controllers.Websocket.HandleConnection)
 		api.GET("/alerts/:streamer_id", c.Controllers.Alert.ServeAlertPage)
 
@@ -25,6 +26,8 @@ func SetupRouter(c *Container) *gin.Engine {
 			setupAuthRoutes(auth, c)
 			setupSessionRoutes(auth, c)
 			setupWalletRoutes(auth, c)
+			setupAlertSettingsRoutes(auth, c)
+			setupQRSettingsRoutes(auth, c)
 			setupTransactionRoutes(auth, c)
 		}
 	}
@@ -71,6 +74,19 @@ func setupWalletRoutes(g *gin.RouterGroup, c *Container) {
 	g.GET("/wallet/address/:wallet_address", authMiddleware, c.Controllers.Wallet.GetByWalletAddress)
 	g.PUT("/wallet/:id", authMiddleware, c.Controllers.Wallet.Update)
 	g.DELETE("/wallet/:id", authMiddleware, c.Controllers.Wallet.Delete)
+}
+
+func setupAlertSettingsRoutes(g *gin.RouterGroup, c *Container) {
+	authMiddleware := middleware.AuthMiddleware(c.JWTService)
+	g.GET("/alert-settings", authMiddleware, c.Controllers.AlertSettings.Get)
+	g.PUT("/alert-settings", authMiddleware, c.Controllers.AlertSettings.Upsert)
+	g.POST("/alerts/test", authMiddleware, c.Controllers.Alert.SendTestAlert)
+}
+
+func setupQRSettingsRoutes(g *gin.RouterGroup, c *Container) {
+	authMiddleware := middleware.AuthMiddleware(c.JWTService)
+	g.GET("/qr-settings", authMiddleware, c.Controllers.QRSettings.Get)
+	g.PUT("/qr-settings", authMiddleware, c.Controllers.QRSettings.Upsert)
 }
 
 func setupTransactionRoutes(g *gin.RouterGroup, c *Container) {
