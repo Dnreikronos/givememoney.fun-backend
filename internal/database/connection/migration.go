@@ -17,6 +17,8 @@ func CreateTable(db *gorm.DB) {
 		&model.Session{},
 		&model.RefreshToken{},
 		&model.Transaction{},
+		&model.AlertSettings{},
+		&model.QRSettings{},
 	)
 
 	if err != nil {
