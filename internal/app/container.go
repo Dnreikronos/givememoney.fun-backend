@@ -18,13 +18,15 @@ type Container struct {
 }
 
 type Controllers struct {
-	Auth        *controller.AuthController
-	EmailAuth   *controller.EmailAuthController
-	Session     *controller.SessionController
-	Wallet      *controller.WalletController
-	Transaction *controller.TransactionController
-	Websocket   *controller.WebsocketController
-	Alert       *controller.AlertController
+	Auth          *controller.AuthController
+	EmailAuth     *controller.EmailAuthController
+	Session       *controller.SessionController
+	Wallet        *controller.WalletController
+	Transaction   *controller.TransactionController
+	Websocket     *controller.WebsocketController
+	Alert         *controller.AlertController
+	AlertSettings *controller.AlertSettingsController
+	QRSettings    *controller.QRSettingsController
 }
 
 func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
@@ -35,12 +37,16 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 	streamerRepo := repository.NewStreamerRepository(db)
 	walletRepo := repository.NewWalletRepository(db)
 	transactionRepo := repository.NewTransactionRepository(db)
+	alertSettingsRepo := repository.NewAlertSettingsRepository(db)
+	qrSettingsRepo := repository.NewQRSettingsRepository(db)
 
 	authService := service.NewAuthService(streamerRepo)
 	jwtService := service.NewJWTService()
 	sessionService := service.NewSessionService(db, jwtService)
 	walletService := service.NewWalletService(walletRepo)
 	transactionService := service.NewTransactionService(transactionRepo, walletRepo, hub)
+	alertSettingsService := service.NewAlertSettingsService(alertSettingsRepo)
+	qrSettingsService := service.NewQRSettingsService(qrSettingsRepo)
 
 	helpers := controller.NewAuthHelpers(sessionService, streamerRepo)
 
@@ -48,10 +54,12 @@ func NewContainer(db *gorm.DB, logger *zap.Logger) (*Container, error) {
 		Auth:        controller.NewAuthController(authService, jwtService, sessionService, streamerRepo, logger, helpers),
 		EmailAuth:   controller.NewEmailAuthController(authService, jwtService, streamerRepo, helpers, logger),
 		Session:     controller.NewSessionController(sessionService, jwtService, streamerRepo, helpers, logger),
-		Wallet:      controller.NewWalletController(walletService),
-		Transaction: controller.NewTransactionController(transactionService),
-		Websocket:   controller.NewWebsocketController(hub),
-		Alert:       controller.NewAlertController(),
+		Wallet:        controller.NewWalletController(walletService),
+		Transaction:   controller.NewTransactionController(transactionService),
+		Websocket:     controller.NewWebsocketController(hub),
+		Alert:         controller.NewAlertController(alertSettingsService, hub),
+		AlertSettings: controller.NewAlertSettingsController(alertSettingsService),
+		QRSettings:    controller.NewQRSettingsController(qrSettingsService),
 	}
 
 	return &Container{
