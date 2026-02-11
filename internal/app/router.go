@@ -4,10 +4,12 @@ package app
 import (
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func SetupRouter(c *Container) *gin.Engine {
 	router := gin.New()
+	router.Use(middleware.PrometheusMiddleware())
 	router.Use(gin.Recovery())
 	router.Use(middleware.RequestIDMiddleware())
 	router.Use(middleware.RequestLoggerMiddleware(c.Logger))
@@ -36,6 +38,8 @@ func SetupRouter(c *Container) *gin.Engine {
 	router.GET("/health", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"status": "ok"})
 	})
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// WebSocket route for OBS alerts
 	router.GET("/ws/streamer/:streamer_id", c.Controllers.Websocket.HandleConnection)
