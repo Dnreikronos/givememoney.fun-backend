@@ -208,6 +208,7 @@ func (c *WalletController) GetByIDPublic(ctx *gin.Context) {
 		"wallet_provider": wallet.WalletProvider,
 		"wallet_address":  wallet.WalletAddress,
 		"streamer_id":     wallet.StreamerID,
+		"streamer_name":   wallet.Streamer.Name,
 	})
 }
 

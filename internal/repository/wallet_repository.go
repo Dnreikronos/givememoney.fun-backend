@@ -34,7 +34,7 @@ func (r *WalletRepository) Create(ctx context.Context, wallet *model.Wallet) (*m
 
 func (r *WalletRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.Wallet, error) {
 	var wallet model.Wallet
-	if err := r.db.WithContext(ctx).First(&wallet, "id = ?", id).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Streamer").First(&wallet, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
 	return &wallet, nil
