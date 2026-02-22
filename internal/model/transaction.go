@@ -12,7 +12,7 @@ type TransactionRequest struct {
 	Message     string         `json:"message"`
 	TxHash      string         `json:"tx_hash" validate:"required"`
 	AddressFrom string         `json:"address_from" validate:"required"`
-	Currency    utils.Currency `json:"currency" validate:"omitempty,oneof=ETH USDT USDC"`
+	Currency    utils.Currency `json:"currency" validate:"omitempty,oneof=ETH SOL USDT USDC"`
 }
 
 type Transaction struct {

@@ -56,7 +56,7 @@ func (c *TransactionController) Create(ctx *gin.Context) {
 			}
 		}
 		if !valid {
-			middleware.AbortWithError(ctx, apperrors.NewValidationError("currency must be one of: ETH, USDT, USDC", nil))
+			middleware.AbortWithError(ctx, apperrors.NewValidationError("currency must be one of: ETH, SOL, USDT, USDC", nil))
 			return
 		}
 	}

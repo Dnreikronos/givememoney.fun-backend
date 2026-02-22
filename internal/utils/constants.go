@@ -13,12 +13,13 @@ const (
 	PhantomWalletProvider  WalletProvider   = "phantom"
 
 	CurrencyETH  Currency = "ETH"
+	CurrencySOL  Currency = "SOL"
 	CurrencyUSDT Currency = "USDT"
 	CurrencyUSDC Currency = "USDC"
 )
 
 // SupportedCurrencies lists currencies accepted for donations (native + stablecoins).
-var SupportedCurrencies = []Currency{CurrencyETH, CurrencyUSDT, CurrencyUSDC}
+var SupportedCurrencies = []Currency{CurrencyETH, CurrencySOL, CurrencyUSDT, CurrencyUSDC}
 
 type ProviderUser struct {
 	ID    string
