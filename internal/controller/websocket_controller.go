@@ -2,6 +2,8 @@ package controller
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	apperrors "github.com/Dnreikronos/givememoney.fun-backend/internal/errors"
 	"github.com/Dnreikronos/givememoney.fun-backend/internal/middleware"
@@ -11,8 +13,31 @@ import (
 	ws "github.com/gorilla/websocket"
 )
 
+func isAllowedOrigin(origin, frontendURL string) bool {
+	// OBS Studio and other desktop clients don't send Origin — allow them
+	if origin == "" {
+		return true
+	}
+	// Allow the configured frontend URL (exact match)
+	if origin == frontendURL {
+		return true
+	}
+	// Allow any localhost / 127.0.0.1 origin for local development
+	return strings.HasPrefix(origin, "http://localhost:") ||
+		strings.HasPrefix(origin, "https://localhost:") ||
+		strings.HasPrefix(origin, "http://127.0.0.1:") ||
+		strings.HasPrefix(origin, "https://127.0.0.1:")
+}
+
 var upgrader = ws.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		frontendURL := os.Getenv("FRONTEND_URL")
+		if frontendURL == "" {
+			frontendURL = "http://localhost:3000"
+		}
+		return isAllowedOrigin(origin, frontendURL)
+	},
 }
 
 // WebsocketController handles WebSocket connections for real-time updates.

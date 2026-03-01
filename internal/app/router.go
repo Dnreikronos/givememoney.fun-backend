@@ -44,9 +44,6 @@ func SetupRouter(c *Container) *gin.Engine {
 
 	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
-	// WebSocket route for OBS alerts
-	router.GET("/ws/streamer/:streamer_id", c.Controllers.Websocket.HandleConnection)
-
 	return router
 }
 
