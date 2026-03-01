@@ -9,10 +9,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    labels:
-      co.elastic.logs/enabled: "true"
-      co.elastic.logs/json.keys_under_root: "true"
-      co.elastic.logs/json.overwrite_keys: "true"
+    # labels:
+    #   co.elastic.logs/enabled: "true"
+    #   co.elastic.logs/json.keys_under_root: "true"
+    #   co.elastic.logs/json.overwrite_keys: "true"
     restart: unless-stopped
     networks:
       - app-network
@@ -48,72 +48,72 @@ services:
     networks:
       - app-network
 
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-    ports:
-      - "127.0.0.1:9200:9200"
-    volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    restart: unless-stopped
-    networks:
-      - app-network
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+  #   container_name: elasticsearch
+  #   environment:
+  #     - discovery.type=single-node
+  #     - xpack.security.enabled=false
+  #     - ES_JAVA_OPTS=-Xms512m -Xmx512m
+  #   ports:
+  #     - "127.0.0.1:9200:9200"
+  #   volumes:
+  #     - elasticsearch_data:/usr/share/elasticsearch/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 10
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.17.0
-    container_name: logstash
-    environment:
-      - LS_JAVA_OPTS=-Xms256m -Xmx256m
-    volumes:
-      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
-    ports:
-      - "127.0.0.1:5044:5044"
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - app-network
+  # logstash:
+  #   image: docker.elastic.co/logstash/logstash:8.17.0
+  #   container_name: logstash
+  #   environment:
+  #     - LS_JAVA_OPTS=-Xms256m -Xmx256m
+  #   volumes:
+  #     - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+  #     - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+  #   ports:
+  #     - "127.0.0.1:5044:5044"
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.17.0
-    container_name: kibana
-    ports:
-      - "127.0.0.1:5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - app-network
+  # kibana:
+  #   image: docker.elastic.co/kibana/kibana:8.17.0
+  #   container_name: kibana
+  #   ports:
+  #     - "127.0.0.1:5601:5601"
+  #   environment:
+  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+  #   depends_on:
+  #     elasticsearch:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.17.0
-    container_name: filebeat
-    user: root
-    command: filebeat -e --strict.perms=false
-    volumes:
-      - ./elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - filebeat_data:/usr/share/filebeat/data
-    depends_on:
-      - logstash
-    restart: unless-stopped
-    networks:
-      - app-network
+  # filebeat:
+  #   image: docker.elastic.co/beats/filebeat:8.17.0
+  #   container_name: filebeat
+  #   user: root
+  #   command: filebeat -e --strict.perms=false
+  #   volumes:
+  #     - ./elk/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+  #     - /var/lib/docker/containers:/var/lib/docker/containers:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - filebeat_data:/usr/share/filebeat/data
+  #   depends_on:
+  #     - logstash
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
 
   prometheus:
     image: prom/prometheus:latest
@@ -149,8 +149,8 @@ services:
 
 volumes:
   postgres_data:
-  elasticsearch_data:
-  filebeat_data:
+  # elasticsearch_data:
+  # filebeat_data:
   prometheus_data:
   grafana_data:
 
